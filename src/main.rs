@@ -1,3 +1,5 @@
+pub mod tiles;
+
 use macroquad::prelude::*;
 
 #[macroquad::main("BasicShapes")]
