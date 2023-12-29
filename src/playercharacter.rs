@@ -59,82 +59,83 @@ impl PlayerCharacter {
 
     // TODO: NEEDS DELTATIME IN COMPUTATIONS
     /// Use this procedure to move the PlayerCharacter around in the world accoarding to arrow key input. 
-    pub fn translate(pc: &mut PlayerCharacter, d: Direction) {
+    pub fn translate(&mut self, d: Direction) {
         match d {
-            Direction::Right => pc.position.x = pc.position.x + 1.0 * pc.velocity,
-            Direction::Left  => pc.position.x = pc.position.x - 1.0 * pc.velocity,
-            Direction::Up    => pc.position.y = pc.position.y + 1.0 * pc.velocity,
-            Direction::Down  => pc.position.y = pc.position.y - 1.0 * pc.velocity,
+            Direction::Right => self.position.x = self.position.x + 1.0 * self.velocity,
+            Direction::Left  => self.position.x = self.position.x - 1.0 * self.velocity,
+            Direction::Up    => self.position.y = self.position.y + 1.0 * self.velocity,
+            Direction::Down  => self.position.y = self.position.y - 1.0 * self.velocity,
             
         }
     }
     
-    pub fn get_position(pc: &PlayerCharacter) -> Vec2 {
-        pc.position
+    pub fn get_position(&self) -> Vec2 {
+        self.position
     }
 
     /* --- === ======== === ### Health Functions ### === ======== === --- */
 
     /// Reduce the health of a player character. This will kill
     /// the player if it is too much damage.
-    pub fn damage(pc: &mut PlayerCharacter, amount: f32) {
-        if pc.current_health - amount > 0.0 {
-            pc.current_health = pc.current_health - amount;
+    pub fn hurt(&mut self, amount: f32) {
+        if self.current_health - amount > 0.0 {
+            self.current_health = self.current_health - amount;
         } else {
-            pc.current_health = 0.0;
-            pc.is_dead = true;
+            self.current_health = 0.0;
+            self.is_dead = true;
         }
     }
     /// Increase a player character health by amount. Cannot overheal (exceed max hp value)
-    pub fn heal(pc: &mut PlayerCharacter, amount: f32) {
-        if pc.current_health + amount < pc.max_health {
-            pc.current_health = pc.current_health + amount;
+    pub fn heal(&mut self, amount: f32) {
+        if self.current_health + amount < self.max_health {
+            self.current_health = self.current_health + amount;
         } else {
-            pc.current_health = pc.max_health;
+            self.current_health = self.max_health;
         }
     }
 
-    pub fn get_health(pc: &PlayerCharacter) -> f32 {
-        pc.current_health
+    pub fn get_health(&self) -> f32 {
+        self.current_health
     }
 
     /* --- === ======== === ### Mana Functions ### === ======== === --- */
 
     /// Safely reduces the mana of a player character by amount.
-    pub fn drain(pc: &mut PlayerCharacter, amount: f32) {
-        if pc.current_mana - amount > 0.0 {
-            pc.current_mana = pc.current_mana - amount;
+    pub fn drain(&mut self, amount: f32) {
+        if self.current_mana - amount > 0.0 {
+            self.current_mana = self.current_mana - amount;
         } else { 
-            pc.current_mana = 0.0;
-            pc.is_oom = true;
+            self.current_mana = 0.0;
+            self.is_oom = true;
         }
     } 
     /// Safely increases mana of a player character by amount.
-    pub fn energize(pc: &mut PlayerCharacter, amount: f32) {
-        if pc.current_mana + amount < pc.max_mana {
-            pc.max_mana = pc.max_mana + amount;
+    pub fn energize(&mut self, amount: f32) {
+        if self.current_mana + amount < self.max_mana {
+            self.max_mana = self.max_mana + amount;
         } else {
-            pc.current_mana = pc. max_mana;
+            self.current_mana = self.max_mana;
         }
+        self.is_oom = false;
     }
     // TODO: FIX
     /// Safely handles an attempt to cast a spell.
-    pub fn cast(pc: &mut PlayerCharacter, spell: Spell) {
-        if pc.is_oom {
-            () // do nothing, out of mana / cant cast
+    pub fn try_cast(&mut self, spell: Spell) -> bool {
+        if self.is_oom {
+            false
         } else {
             match spell {
-                Spell::KeneticPulse => if pc.current_mana >= 10.0 {
-                    PlayerCharacter::drain(pc, 10.0);
-                    () // TODO: Actually be able to cast a spell meaningfully
+                Spell::KeneticPulse => if self.current_mana >= 10.0 {
+                    self.drain(10.0);
+                    true 
                 } else {
-                    () // do nothing, insufficient mana
+                    false
                 }
-                Spell::Lightning    => if pc.current_mana >= 30.0 {
-                    PlayerCharacter::drain(pc, 30.0);
-                    () // TODO: Actually be able to cast a spell meaningfully
+                Spell::Lightning    => if self.current_mana >= 30.0 {
+                    self.drain(30.0);
+                    true 
                 } else {
-                    () // do nothing, insufficient mana
+                    false
                 }
             }
         }

@@ -15,7 +15,9 @@ async fn main() {
         clear_background(BLACK);
         
         // Sample text
-        draw_text("rust-game", screen_width() / 2_f32, screen_height() / 2_f32, 12_f32, WHITE);
+        let playerpos: String = "(".to_string() + &player.get_position().x.to_string() + ", " + &player.get_position().y.to_string() + ")";
+        
+        draw_text(&playerpos, screen_width() / 2_f32, screen_height() / 2_f32, 12_f32, WHITE);
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) { 
@@ -24,26 +26,26 @@ async fn main() {
 
         // arrow movement
         if is_key_down(KeyCode::Right) {
-            PlayerCharacter::translate(&mut player, Direction::Right);
+            player.translate(Direction::Right);
         }
         if is_key_down(KeyCode::Left) {
-            PlayerCharacter::translate(&mut player, Direction::Left);
+            player.translate(Direction::Left);
         }
         if is_key_down(KeyCode::Up) {
-            PlayerCharacter::translate(&mut player, Direction::Up);
+            player.translate(Direction::Up);
         }
         if is_key_down(KeyCode::Down) {
-            PlayerCharacter::translate(&mut player, Direction::Down);
+            player.translate(Direction::Down);
         }
 
         // health and mana debug
         if is_key_released(KeyCode::U) {
-            PlayerCharacter::damage(&mut player, 12.4);
-            println!("Ouch! Your health is now {}", PlayerCharacter::get_health(&player));
+            player.hurt(12.4);
+            println!("Ouch! Your health is now {}", player.get_health());
         }
         if is_key_down(KeyCode::J) {
-            PlayerCharacter::heal(&mut player, 6.7);
-            println!("Thanks! Your health is now {}", PlayerCharacter::get_health(&player));
+            player.heal(6.7);
+            println!("Thanks! Your health is now {}", player.get_health());
         }
 
         next_frame().await
