@@ -1,56 +1,36 @@
 
-use macrosquad::Math::Vec2; 
+use macroquad::math::Vec2; 
 // Vec2 Docs: https://docs.rs/macroquad/latest/macroquad/math/struct.Vec2.html
 
 
 
 
-struct PlayerCharacter {
+pub struct PlayerCharacter {
 
-    position: Vec2,  // euclidian coordinates in the game world
-    velocity: i32,   // m/s
+    pub position: Vec2,  // euclidian coordinates in the game world
+    pub velocity: f32,   // m/s
 }
 
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-/* TODO: NEEDS DELTATIME IN COMPUTATIONS */
-///
-/// Use this function to move the PlayerCharacter around in the world accoarding to arrow key input. 
-///  
-fn translate_playercharacter(pc: PlayerCharacter, d: Direction) -> PlayerCharacter {
-    match d {
-        Direction::Up    => PlayerCharacter {
-                                    position: Vec2 {
-                                        x: pc.position.x,
-                                        y: pc.position.y + 1 * pc.velocity,
-                                    },
-                                    velocity: pc.velocity
-                                },
-        Direction::Down  => PlayerCharacter {
-                                    position: Vec2 {
-                                        x: pc.position.x,
-                                        y: pc.position.y - 1 * pc.velocity,
-                                    },
-                                    velocity: pc.velocity
-                                },
-        Direction::Left  => PlayerCharacter {
-                                    position: Vec2 {
-                                        x: pc.position.x - 1 * pc.velocity,
-                                        y: pc.position.y, 
-                                    },
-                                    velocity: pc.velocity
-                                },
-        Direction::Right => PlayerCharacter {
-                                    position: Vec2 {
-                                        x: pc.position.x + 1 * pc.velocity,
-                                        y: pc.position.y, 
-                                    },
-                                    velocity: pc.velocity
-                                },
+impl PlayerCharacter {
+    /* TODO: NEEDS DELTATIME IN COMPUTATIONS */
+    ///
+    /// Use this procedure to move the PlayerCharacter around in the world accoarding to arrow key input. 
+    ///  
+    pub fn translate(pc: &mut PlayerCharacter, d: Direction) {
+        match d {
+            Direction::Right => pc.position.x = pc.position.x + 1.0 * pc.velocity,
+            Direction::Left  => pc.position.x = pc.position.x - 1.0 * pc.velocity,
+            Direction::Up    => pc.position.y = pc.position.y + 1.0 * pc.velocity,
+            Direction::Down  => pc.position.y = pc.position.y - 1.0 * pc.velocity,
+            
+        }
     }
 }
+
+pub enum Direction {
+    Right,
+    Left,
+    Up,
+    Down,
+}
+
