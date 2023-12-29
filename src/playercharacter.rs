@@ -118,8 +118,8 @@ impl PlayerCharacter {
         }
         self.is_oom = false;
     }
-    // TODO: FIX
-    /// Safely handles an attempt to cast a spell.
+
+    /// Safely handles an attempt to cast a spell. Returns whether or not is possible
     pub fn try_cast(&mut self, spell: Spell) -> bool {
         if self.is_oom {
             false
@@ -141,8 +141,8 @@ impl PlayerCharacter {
         }
     }
 
-    pub fn get_mana(pc: &PlayerCharacter) -> f32 {
-        pc.current_mana
+    pub fn get_mana(&self) -> f32 {
+        self.current_mana
     }
 }
 
