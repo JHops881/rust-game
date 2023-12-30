@@ -18,10 +18,31 @@ use macroquad::math::Vec2;
 
 
 
-TODO LIST:
-[ ] PlayerCharacter::from_saved() - Make this function.
-[ ] PlayerCharacter.translate()   - Needs Delta Time included in computations.
-[ ] EnemyCharacter.translate()    - Needs Delta Time included in computations. 
+--- ==== ==== ## TODO LIST:## ==== ==== ---
+
+[ ] PlayerCharacter::from_saved() 12/29/2023
+        * Make this function.
+
+[X] PlayerCharacter.translate() 12/29/2023
+        * Needs Delta Time included in computations.  RESOLVED
+
+[X] EnemyCharacter.translate() 12/29/2023
+        * Needs Delta Time included in computations.  RESOLVED
+
+[ ] EnemyCharacter.translate() 12/29/2023
+        * Use an angle for the direction instead of an enum
+
+    [ ] EnemyCharacter.move_towards_player()
+            * Use the NEW .translate() method to build smarter/faster
+              pathfinding with better math.
+
+[ ] PlayerCharacter::new() 12/29/2023
+       * There has to be a more elegant way that is less error prone to get
+         that 2.68 speed in three times. 
+
+[ ] PlayerCharacter.try_cast() 12/29/2023
+       * Make it a pure function. As long as we know whether or not
+         we can cast it, the .drain() call can be handled elsewhere.
 
 
 */
@@ -50,18 +71,19 @@ pub enum Direction {
     Down,
 }
 
+// We will get to cast these later. Here are the mana costs used for implementation.
 pub enum Spell {
     KeneticPulse, // 10 mana
     Lightning,    // 30 mana
 }
 
-
+// Star of the show!
 pub struct PlayerCharacter {
 
     position:         Vec2,  // euclidian coordinates in the game world
-    speed:            f32,   // m/s
-    normal_speed:     f32,
-    sprint_speed:     f32, 
+    speed:            f32,   // current speed in m/s
+    normal_speed:     f32,   // jogging speed, just using WASD
+    sprint_speed:     f32,   // 2x the normal speed, hold shift to access
 
     is_dead:          bool,
     current_health:   f32,
@@ -76,6 +98,7 @@ pub struct PlayerCharacter {
 
 impl PlayerCharacter {
 
+    // TODO: A fix is needed. See TODO LIST at top of document. Remove this when resolved. 
     /// Default Constructor | Get a fresh player character.
     pub fn new() -> PlayerCharacter {
         PlayerCharacter {
@@ -84,7 +107,7 @@ impl PlayerCharacter {
                 y: 0.0,
             },
             speed: 2.68,
-            normal_speed: 2.68,         // fix repeating number
+            normal_speed: 2.68,         // <--- fix repeating number (2.68)
             sprint_speed: 2.0 * 2.68,
 
             is_dead: false,
@@ -102,7 +125,6 @@ impl PlayerCharacter {
     pub fn from_saved() {
     }
 
-    // TODO: A fix is needed. See TODO LIST at top of document. Remove this when resolved. 
     /// Use this procedure to move the PlayerCharacter around in the world accoarding to arrow key input. 
     pub fn translate(&mut self, d: Direction, deltat: f32) {
         match d {
@@ -114,10 +136,11 @@ impl PlayerCharacter {
         }
     }
 
+    /// toggles sprinting of player on
     pub fn begin_sprint(&mut self) {
         self.speed = self.sprint_speed;
     }
-
+    /// toggles sprinting of player off
     pub fn end_sprint(&mut self) {
         self.speed = self.normal_speed;
     }
@@ -172,6 +195,8 @@ impl PlayerCharacter {
         self.is_oom = false;
     }
 
+    // THIS LOGIC IS NONESENSE. FIX IMMEDIEATELY! -JOSEPH
+    // TODO: A fix is needed. See TODO LIST at top of document. Remove this when resolved. 
     /// Safely handles an attempt to cast a spell. Returns whether or not is possible
     pub fn try_cast(&mut self, spell: Spell) -> bool {
         if self.is_oom {
@@ -220,12 +245,13 @@ pub enum EnemyType {
     Drinker,   // a little faster than average, heals on attacking player
     Crawler,   // Fast, High Damage, Low HP pool
 }
+// Boggies! Watch out!
 pub struct EnemyCharacter { 
 
     enemy_type:       EnemyType,
 
     position:         Vec2,  // euclidian coordinates in the game world
-    speed:         f32,   // m/s
+    speed:            f32,   // m/s
 
     is_dead:          bool,
     current_health:   f32,
@@ -236,13 +262,16 @@ pub struct EnemyCharacter {
 }
 
 impl EnemyCharacter {
-
+    
+    /// This will Construct and return an EnemyCharacter with corresponding stats
+    /// based on what type you make it. For now, this is also where those stats are
+    /// decided, meaning balance changes to enemy types can be tweaked here. 
     pub fn new(t: EnemyType, p: Vec2) -> EnemyCharacter {
         match t {
             EnemyType::Ghoul => EnemyCharacter {
                 enemy_type: t,
                 position: p,
-                speed: 1.0,
+                speed: 2.5,
                 is_dead: false,
                 current_health: 100.0,
                 max_health: 100.0,
@@ -251,7 +280,7 @@ impl EnemyCharacter {
             EnemyType::Phantom => EnemyCharacter {
                 enemy_type: t,
                 position: p,
-                speed: 0.5,
+                speed: 1.75,
                 is_dead: false,
                 current_health: 200.0,
                 max_health: 200.0,
@@ -260,7 +289,7 @@ impl EnemyCharacter {
             EnemyType::Drinker => EnemyCharacter {
                 enemy_type: t,
                 position: p,
-                speed: 1.5,
+                speed: 3.5,
                 is_dead: false,
                 current_health: 75.0,
                 max_health: 150.0,
@@ -269,7 +298,7 @@ impl EnemyCharacter {
             EnemyType::Crawler => EnemyCharacter {
                 enemy_type: t,
                 position: p,
-                speed: 3.0,
+                speed: 8.0,
                 is_dead: false,
                 current_health: 50.0,
                 max_health: 50.0,
@@ -283,10 +312,47 @@ impl EnemyCharacter {
     /// Use this procedure to move the EnemyCharacter around in the world. 
     pub fn translate(&mut self, d: Direction, deltat: f32) {
         match d {
-            Direction::Right => self.position.x = (self.position.x + 1.0 * self.speed) * deltat,
-            Direction::Left  => self.position.x = (self.position.x - 1.0 * self.speed) * deltat,
-            Direction::Up    => self.position.y = (self.position.y + 1.0 * self.speed) * deltat,
-            Direction::Down  => self.position.y = (self.position.y - 1.0 * self.speed) * deltat,
+            Direction::Right => self.position.x = self.position.x + 1.0 * self.speed * deltat,
+            Direction::Left  => self.position.x = self.position.x - 1.0 * self.speed * deltat,
+            Direction::Up    => self.position.y = self.position.y + 1.0 * self.speed * deltat,
+            Direction::Down  => self.position.y = self.position.y - 1.0 * self.speed * deltat,
+            
+        }
+    }
+
+    // TODO: A fix is needed. See TODO LIST at top of document. Remove this when resolved. 
+    /// Extremly Crude pathfinding for enemies. Will be reworked later.
+    pub fn move_towards_player(&mut self, player_character: & PlayerCharacter, deltat: f32) {
+
+        // the signed value of the distance between player and enemy on both axis?
+        let x_difference: f32 = self.get_position().x - player_character.get_position().x;
+        let y_difference: f32 = self.get_position().y - player_character.get_position().y;
+        
+        // basically, travel along the axis with the larger distance, also go in correct
+        // direction (toward the player)
+        match x_difference.abs().partial_cmp(&y_difference.abs()) {
+            Some(std::cmp::Ordering::Less) => {
+                if y_difference > 0.0 {
+                    self.translate(Direction::Down, deltat)
+                } else {
+                    self.translate(Direction::Up, deltat)
+                }
+            }
+            Some(std::cmp::Ordering::Equal) => {
+                // this should like never happen, but if it does...
+                self.translate(Direction::Up, deltat)
+                // not a huge deal honeslty. We'll fix it later anyway lol
+            }
+            Some(std::cmp::Ordering::Greater) => {
+                if x_difference > 0.0 {
+                    self.translate(Direction::Left, deltat)
+                } else {
+                    self.translate(Direction::Right, deltat)
+                }
+            }
+            None => {
+                println!("Comparison failed; at least one value is NaN");
+            }
             
         }
     }
@@ -320,6 +386,8 @@ impl EnemyCharacter {
         self.current_health
     }
 
+    // Really is all that it sounds like. Pick a character to attack. Some sort of collision
+    // is intended to precede this call. 
     pub fn basic_attack(&mut self, player_character: &mut PlayerCharacter) {
 
         let basic_attack_scale_factor: f32 = 0.75;

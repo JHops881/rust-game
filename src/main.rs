@@ -11,7 +11,10 @@ async fn main() {
 
     // initialize the player's character
     let mut player = PlayerCharacter::new();
+    // initalize an enemy
     let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2{x: 1.0, y:1.0});
+
+    // Let's throw them in lists to iterate through...
 
     let mut allies:  Vec<&mut PlayerCharacter> = Vec::new(); // gonna do something with these later.
     let mut enemies: Vec<&mut EnemyCharacter> = Vec::new();  // Although, not really sure it's the best
@@ -20,26 +23,31 @@ async fn main() {
 
     // gme loop crap
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
+
     let mut last_update_time: f32 = get_time() as f32;
     let game_time_factor: f32 = 1.0;
 
     loop {
+
+        // EXAMPLE GAME LOOP STRUCTURE
+        // 1. input
+        // 2. update
+        // 3. draw
 
         // delta time calculations
         let real_delta_time = get_time() as f32 - last_update_time;
         last_update_time = last_update_time + real_delta_time;
         let game_delta_time : f32 = real_delta_time * game_time_factor;
 
+       
 
-        // 1. input
-        // 2. update
-        // 3. draw
-
-        // input
+        /* INPUT */
         // handled for us by macro quad. 
 
-        // update
+        /* UPDATE */
         // arrow moevemnt
+        ghoul.move_towards_player(&player, game_delta_time);
+
         if is_key_down(KeyCode::D) {
             player.translate(Direction::Right, game_delta_time);
         }
@@ -53,7 +61,7 @@ async fn main() {
             player.translate(Direction::Down, game_delta_time);
         }
         
-        // sprinting mechanic implementation -From: Jason Ryan de la Masa
+        // sprinting mechanic implementation from Jason Ryan de la Masa
         if is_key_pressed(KeyCode::LeftShift) {
             player.begin_sprint();
         }
@@ -66,7 +74,7 @@ async fn main() {
             std::process::exit(0);
         }
 
-        // draw
+        /* DRAW */
         // Clear screen
         clear_background(BLACK);
 
@@ -104,7 +112,7 @@ pub fn draw_player_character(character: &PlayerCharacter, perspective_from: &Pla
     // draw call. Self explanitory. 
     draw_circle(character_screen_position.x, character_screen_position.y, 32.0, c);
 
-} // I can't get the generics/templating to work so I just made two different functions, ... Works for now IG.
+} // I can't get the generics/templating to work so I just made two different functions, ... Works for now ig. Jeez.
 
 pub fn draw_enemy_character(character: &EnemyCharacter, perspective_from: &PlayerCharacter, c: Color) {
     let character_screen_position: Vec2 = convert_to_screen_coords(character.get_position(), &perspective_from, TILE_WIDTH);
@@ -113,7 +121,7 @@ pub fn draw_enemy_character(character: &EnemyCharacter, perspective_from: &Playe
 
 
 // Let's put the indev GUI into a single procedure that we can call in the main loop ezpz. 
-// This LGTM!
+// This LGTM! 
 pub fn draw_gui(player: &PlayerCharacter) {
 
     let ui_font_size: f32 = 16.0;
@@ -121,14 +129,17 @@ pub fn draw_gui(player: &PlayerCharacter) {
     let ui_start_location: f32 = 20.0;
 
     /* EXAMPLE
-    
-    Position: (X, Y)
-    Health: ###
-    Mana: ###
 
+    \/ [top left of screen] \/
+    
+    "Position: (X, Y)"
+    "Health: ###"
+    "Mana: ###"
+    
+    /\   /\    /\   /\   /\  /\
     */
 
-    // This may be unreadable. Just refer to the example above. 
+    // This may be unreadable. Just refer to the example above. It does that.
     let player_position_text: String =
           "Position: (".to_string()
         + &player.get_position().x.to_string()
