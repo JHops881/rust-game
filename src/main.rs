@@ -21,7 +21,7 @@ fn window_conf() -> Conf {
 async fn main() {
 
     init_tile_atlas();
-    let map = gen_map_chunk(0.80);
+    let map = gen_map_chunk(0.50);
     loop {
         // Clear screen
         clear_background(BLACK);

@@ -82,6 +82,7 @@ enum TileShape {
     Peninsula,
     Corner,
     DentedCorner,
+    Island
 }
 
 enum TileType {
@@ -115,6 +116,7 @@ impl Tile {
             (Ground, Peninsula) => (96.0, 16.0),
             (Ground, Corner) => (112.0, 16.0),
             (Ground, DentedCorner) => (112.0, 32.0),
+            (Ground, Island) => (80.0, 32.0)
         }
     }
 
@@ -295,7 +297,7 @@ pub fn gen_map_chunk(p: f32) -> [Option<Tile>; CHUNK_SIZE] {
             }
             (false, false, false, false) => {
                 // Island tile
-                tile_shape = TileShape::Junction;
+                tile_shape = TileShape::Island;
                 orientation = TileOrientation::Default;
             }
         };
