@@ -1,22 +1,18 @@
 use ::rand::{
     distributions::{Distribution, Standard},
-    rngs::ThreadRng,
-    Rng, RngCore,
+    Rng,
 };
 use macroquad::prelude::*;
 use std::{f32::consts::PI, sync::OnceLock};
 
-static TILE_ATLAS: OnceLock<Texture2D> = OnceLock::new();
-
-const TILE_SIDE_LENGTH: f32 = 16.0;
-const SCALE: f32 = 4.0;
-const TILE_DIMENSIONS: macroquad::math::Vec2 = Vec2 {
+pub const TILE_SIDE_LENGTH: f32 = 16.0;
+pub const SCALE: f32 = 2.0;
+pub const TILE_DIMENSIONS: macroquad::math::Vec2 = Vec2 {
     x: TILE_SIDE_LENGTH * SCALE,
     y: TILE_SIDE_LENGTH * SCALE,
 };
 
-/// Total tiles in a map chunk
-const CHUNK_SIZE: usize = 100;
+static TILE_ATLAS: OnceLock<Texture2D> = OnceLock::new();
 
 /// Load in the tile atlas for use in future calls
 pub fn init_tile_atlas() {
@@ -28,12 +24,9 @@ pub fn init_tile_atlas() {
     TILE_ATLAS
         .set(atlas)
         .expect("Initializing the tile atlas failed.");
-    // build_textures_atlas(); // Unsure how this works or if it is even necessary.
 }
 
-/// # Returns
-///
-/// The tile atlas
+/// Returns the tile atlas
 fn get_tile_atlas() -> &'static Texture2D {
     match TILE_ATLAS.get() {
         Some(atlas) => atlas,
@@ -41,7 +34,41 @@ fn get_tile_atlas() -> &'static Texture2D {
     }
 }
 
-enum TileOrientation {
+/// A single game tile on the ground
+pub struct Tile {
+    pub tile_type: TileType,
+    pub tile_shape: TileShape,
+    pub orientation: TileOrientation,
+    /// A number that may or may not give the tile a slight different
+    /// appearance.
+    pub variant: u8,
+}
+
+/// Which type of tile will be shown. E.g. ground, water, wood, etc.
+pub enum TileType {
+    Ground,
+}
+
+/// The base shape of the tile given how it connects to the tiles around it.
+pub enum TileShape {
+    Center,
+    DentedCenter,
+    DoubleDentedCenter,
+    CrossDentedCenter,
+    TripleDentedCenter,
+    Junction,
+    Edge,
+    DentedEdge,
+    DoubleDentedEdge,
+    Straight,
+    Peninsula,
+    Corner,
+    DentedCorner,
+    Island,
+}
+
+/// The rotation and mirroring of a tile.
+pub enum TileOrientation {
     Default,
     Rotated90,
     Rotated180,
@@ -52,6 +79,7 @@ enum TileOrientation {
     MirroredRotated270,
 }
 
+/// Allow for random rotations of tiles.
 impl Distribution<TileOrientation> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TileOrientation {
         match rng.gen_range(0..=8) {
@@ -68,37 +96,9 @@ impl Distribution<TileOrientation> for Standard {
     }
 }
 
-enum TileShape {
-    Center,
-    DentedCenter,
-    DoubleDentedCenter,
-    CrossDentedCenter,
-    TripleDentedCenter,
-    Junction,
-    Edge,
-    DentedEdge,
-    DoubleDentedEdge,
-    Straight,
-    Peninsula,
-    Corner,
-    DentedCorner,
-    Island
-}
-
-enum TileType {
-    Ground,
-}
-
-pub struct Tile {
-    tile_type: TileType,
-    tile_shape: TileShape,
-    orientation: TileOrientation,
-    variant: u8,
-}
-
 impl Tile {
-    // Get the texture coordinates for the top left corner of this tile in the
-    // texture atlas.
+    /// Get the texture coordinates for the top left corner of this tile in the
+    /// texture atlas.
     fn get_texture_coords(&self) -> (f32, f32) {
         use TileShape::*;
         use TileType::*;
@@ -116,10 +116,11 @@ impl Tile {
             (Ground, Peninsula) => (96.0, 16.0),
             (Ground, Corner) => (112.0, 16.0),
             (Ground, DentedCorner) => (112.0, 32.0),
-            (Ground, Island) => (80.0, 32.0)
+            (Ground, Island) => (80.0, 32.0),
         }
     }
 
+    /// Get the numerical data of the tile's rotation given it's orientation.
     fn get_texture_rotation(&self) -> (f32, bool, bool) {
         match &self.orientation {
             TileOrientation::Default => (0.0, false, false),
@@ -155,289 +156,13 @@ impl Tile {
         // let color = Color::from_rgba(0x0b, 0x46, 0x23, 0xff);
         let color = WHITE;
         draw_texture_ex(get_tile_atlas(), position.x, position.y, color, draw_params);
+        draw_rectangle_lines(
+            position.x,
+            position.y,
+            TILE_SIDE_LENGTH * SCALE,
+            TILE_SIDE_LENGTH * SCALE,
+            1.0,
+            Color::from_rgba(0x00, 0xff, 0x00, 0x80),
+        )
     }
-}
-
-pub fn draw_map_test(chunk: &[Option<Tile>; CHUNK_SIZE]) {
-    for item in chunk.iter().enumerate() {
-        let (i, tile) = item;
-
-        let x = (i % 10) as f32 * SCALE * TILE_SIDE_LENGTH;
-        let y = (i / 10) as f32 * SCALE * TILE_SIDE_LENGTH;
-        match tile {
-            Some(tile) => tile.draw(Vec2 { x, y }),
-            None => (),
-        }
-    }
-}
-
-/// # Arguments
-///
-/// * `p` - The probability that a given tile will be `true`
-///
-/// # Returns
-///
-/// A section of the map of size `CHUNK_SIZE`. For now, just a bunch of `true`s
-/// and `false`s.
-pub fn gen_map_chunk(p: f32) -> [Option<Tile>; CHUNK_SIZE] {
-    let mut chunk: [bool; CHUNK_SIZE] = [false; CHUNK_SIZE];
-    let mut random: ThreadRng = ThreadRng::default();
-
-    // If below the threshold, tile is true
-    let threshold = ((p as f64) * (std::u32::MAX as f64)).trunc() as u32;
-
-    // Boolean map
-    for i in 0..CHUNK_SIZE {
-        chunk[i] = random.next_u32() < threshold;
-    }
-
-    const NO_TILE: Option<Tile> = None::<Tile>;
-    let mut arr: [Option<Tile>; CHUNK_SIZE] = [NO_TILE; CHUNK_SIZE];
-
-    for i in 0..CHUNK_SIZE {
-        if !chunk[i] {
-            continue;
-        }
-
-        let top_edge = i < 10;
-        let bot_edge = 89 < i;
-        let left_edge = i % 10 == 0;
-        let right_edge = i % 10 == 9;
-
-        let top_left = !top_edge && !left_edge && chunk[i - 11];
-        let top = !top_edge && chunk[i - 10];
-        let top_right = !top_edge && !right_edge && chunk[i - 9];
-        let left = !left_edge && chunk[i - 1];
-        let right = !right_edge && chunk[i + 1];
-        let bot_left = !bot_edge && !left_edge && chunk[i + 9];
-        let bot = !bot_edge && chunk[i + 10];
-        let bot_right = !bot_edge && !right_edge && chunk[i + 11];
-
-        let mut tile_type = TileType::Ground;
-        let mut tile_shape = TileShape::Center;
-        let mut orientation = TileOrientation::Default;
-        let mut variant = 0;
-
-        // Get the basic shape and orientation
-        match (top, bot, left, right) {
-            (true, true, true, true) => {
-                // Center tile
-                orientation = ThreadRng::default().gen();
-                variant = ThreadRng::default().gen::<u8>() % 8;
-            }
-            (false, true, true, true) => {
-                // Edge tile
-                tile_shape = TileShape::Edge;
-                orientation = TileOrientation::Default;
-            }
-            (true, false, true, true) => {
-                // Edge tile
-                tile_shape = TileShape::Edge;
-                orientation = TileOrientation::Rotated180;
-            }
-            (true, true, false, true) => {
-                // Edge tile
-                tile_shape = TileShape::Edge;
-                orientation = TileOrientation::Rotated270;
-            }
-            (true, true, true, false) => {
-                // Edge tile
-                tile_shape = TileShape::Edge;
-                orientation = TileOrientation::Rotated90;
-            }
-            (false, false, true, true) => {
-                // Straight tile
-                tile_shape = TileShape::Straight;
-                orientation = TileOrientation::Default;
-            }
-            (true, true, false, false) => {
-                // Straight tile
-                tile_shape = TileShape::Straight;
-                orientation = TileOrientation::Rotated90;
-            }
-            (false, true, true, false) => {
-                // Corner tile
-                tile_shape = TileShape::Corner;
-                orientation = TileOrientation::Default;
-            }
-            (true, false, true, false) => {
-                // Corner tile
-                tile_shape = TileShape::Corner;
-                orientation = TileOrientation::Rotated90;
-            }
-            (true, false, false, true) => {
-                // Corner tile
-                tile_shape = TileShape::Corner;
-                orientation = TileOrientation::Rotated180;
-            }
-            (false, true, false, true) => {
-                // Corner tile
-                tile_shape = TileShape::Corner;
-                orientation = TileOrientation::Rotated270;
-            }
-            (false, false, true, false) => {
-                // Peninsula tile
-                tile_shape = TileShape::Peninsula;
-                orientation = TileOrientation::Default;
-            }
-            (false, false, false, true) => {
-                // Peninsula tile
-                tile_shape = TileShape::Peninsula;
-                orientation = TileOrientation::Rotated180;
-            }
-            (true, false, false, false) => {
-                // Peninsula tile
-                tile_shape = TileShape::Peninsula;
-                orientation = TileOrientation::Rotated90;
-            }
-            (false, true, false, false) => {
-                // Peninsula tile
-                tile_shape = TileShape::Peninsula;
-                orientation = TileOrientation::Rotated270;
-            }
-            (false, false, false, false) => {
-                // Island tile
-                tile_shape = TileShape::Island;
-                orientation = TileOrientation::Default;
-            }
-        };
-
-        match tile_shape {
-            TileShape::Center => match (top_left, top_right, bot_left, bot_right) {
-                (true, true, true, true) => (),
-                (true, true, true, false) => {
-                    tile_shape = TileShape::DentedCenter;
-                    orientation = TileOrientation::Rotated90;
-                }
-                (true, true, false, true) => {
-                    tile_shape = TileShape::DentedCenter;
-                    orientation = TileOrientation::Rotated180;
-                }
-                (true, true, false, false) => {
-                    tile_shape = TileShape::DoubleDentedCenter;
-                    orientation = TileOrientation::Rotated180;
-                }
-                (true, false, true, true) => {
-                    tile_shape = TileShape::DentedCenter;
-                    orientation = TileOrientation::Default;
-                }
-                (true, false, true, false) => {
-                    tile_shape = TileShape::DoubleDentedCenter;
-                    orientation = TileOrientation::Rotated90;
-                }
-                (true, false, false, true) => {
-                    tile_shape = TileShape::CrossDentedCenter;
-                    orientation = TileOrientation::Default;
-                }
-                (true, false, false, false) => {
-                    tile_shape = TileShape::TripleDentedCenter;
-                    orientation = TileOrientation::Rotated90;
-                }
-                (false, true, true, true) => {
-                    tile_shape = TileShape::DentedCenter;
-                    orientation = TileOrientation::Rotated270;
-                }
-                (false, true, true, false) => {
-                    tile_shape = TileShape::CrossDentedCenter;
-                    orientation = TileOrientation::Rotated90;
-                }
-                (false, true, false, true) => {
-                    tile_shape = TileShape::DoubleDentedCenter;
-                    orientation = TileOrientation::Rotated270;
-                }
-                (false, true, false, false) => {
-                    tile_shape = TileShape::TripleDentedCenter;
-                    orientation = TileOrientation::Rotated180;
-                }
-                (false, false, true, true) => {
-                    tile_shape = TileShape::DoubleDentedCenter;
-                    orientation = TileOrientation::Default;
-                }
-                (false, false, true, false) => {
-                    tile_shape = TileShape::TripleDentedCenter;
-                    orientation = TileOrientation::Default;
-                }
-                (false, false, false, true) => {
-                    tile_shape = TileShape::TripleDentedCenter;
-                    orientation = TileOrientation::Rotated270;
-                }
-                (false, false, false, false) => {
-                    tile_shape = TileShape::Junction;
-                }
-            },
-            TileShape::Edge => match orientation {
-                TileOrientation::Default => match (bot_left, bot_right) {
-                    (true, true) => (),
-                    (true, false) => tile_shape = TileShape::DentedEdge,
-                    (false, true) => {
-                        tile_shape = TileShape::DentedEdge;
-                        orientation = TileOrientation::MirroredDefault;
-                    }
-                    (false, false) => tile_shape = TileShape::DoubleDentedEdge,
-                },
-                TileOrientation::Rotated90 => match (top_left, bot_left) {
-                    (true, true) => (),
-                    (true, false) => tile_shape = TileShape::DentedEdge,
-                    (false, true) => {
-                        tile_shape = TileShape::DentedEdge;
-                        orientation = TileOrientation::MirroredRotated90;
-                    }
-                    (false, false) => tile_shape = TileShape::DoubleDentedEdge,
-                },
-                TileOrientation::Rotated180 => match (top_right, top_left) {
-                    (true, true) => (),
-                    (true, false) => tile_shape = TileShape::DentedEdge,
-                    (false, true) => {
-                        tile_shape = TileShape::DentedEdge;
-                        orientation = TileOrientation::MirroredRotated180;
-                    }
-                    (false, false) => tile_shape = TileShape::DoubleDentedEdge,
-                },
-                TileOrientation::Rotated270 => match (bot_right, top_right) {
-                    (true, true) => (),
-                    (true, false) => tile_shape = TileShape::DentedEdge,
-                    (false, true) => {
-                        tile_shape = TileShape::DentedEdge;
-                        orientation = TileOrientation::MirroredRotated270;
-                    }
-                    (false, false) => tile_shape = TileShape::DoubleDentedEdge,
-                },
-                _ => (),
-            },
-
-            TileShape::Corner => match orientation {
-                TileOrientation::Default => {
-                    if !bot_left {
-                        tile_shape = TileShape::DentedCorner;
-                    }
-                }
-                TileOrientation::Rotated90 => {
-                    if !top_left {
-                        tile_shape = TileShape::DentedCorner;
-                    }
-                }
-                TileOrientation::Rotated180 => {
-                    if !top_right {
-                        tile_shape = TileShape::DentedCorner;
-                    }
-                }
-                TileOrientation::Rotated270 => {
-                    if !bot_right {
-                        tile_shape = TileShape::DentedCorner;
-                    }
-                }
-                _ => (),
-            },
-            _ => (),
-        }
-
-        arr[i] = Some(Tile {
-            tile_type,
-            tile_shape,
-            orientation,
-            variant,
-        });
-    }
-
-    return arr;
 }
