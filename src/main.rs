@@ -25,7 +25,7 @@ async fn main() {
         // Clear screen
         clear_background(BLACK);
 
-        draw_tile(Tile::GroundCenter, Vec2::ZERO);
+        draw_map_test();
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) {
