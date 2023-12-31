@@ -22,7 +22,7 @@ fn window_conf() -> Conf {
 async fn main() {
 
     init_tile_atlas();
-    let chunk = gen_map_chunk(0.90);
+    let chunk = Chunk::new();
     loop {
         // Clear screen
         clear_background(BLACK);
