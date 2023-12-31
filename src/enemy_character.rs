@@ -71,8 +71,10 @@ impl EnemyCharacter {
 
     /// Use this procedure to move the EnemyCharacter around in the world.
     /// needs a unit vector as a direction to move in.
-    pub fn translate(&mut self, unit_vector: Vec2, deltat: f32) {
+    pub fn translate(&mut self, unit_vector: Vec2, mut deltat: f32) {
         
+        deltat /= 1000.0;
+
         self.position.x = self.position.x + unit_vector.x * self.speed * deltat;
         self.position.y = self.position.y + unit_vector.y * self.speed * deltat;
     
