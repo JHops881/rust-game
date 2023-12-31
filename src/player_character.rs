@@ -2,6 +2,8 @@ use macroquad::math::Vec2;
 // Vec2 Docs: https://docs.rs/macroquad/latest/macroquad/math/struct.Vec2.html
 use macroquad::input::*;
 
+use crate::{environment::{self, Environment}, player_projectile::PlayerProjectile};
+
 pub enum Direction {
     Right,
     Left,
@@ -9,13 +11,12 @@ pub enum Direction {
     Down,
 }
 
-// We will get to cast these later. Here are the mana costs used for implementation.
+// We will get to cast these later. 
 pub enum Spell {
+    Basic,
     KeneticPulse,
     Lightning,
 }
-const KENETIC_PULSE_COST: f32 = 10.0;
-const LIGHTNING_COST: f32 = 30.0;
 
 // Star of the show!
 pub struct PlayerCharacter {
@@ -28,9 +29,17 @@ pub struct PlayerCharacter {
     current_health: f32,
     max_health: f32,
 
-    is_oom: bool, // (Out Of Mana)
     current_mana: f32,
     max_mana: f32,
+
+    basic_cost: f32,          // mana cost of basic attack
+    kenetic_pulse_cost: f32,  // ... kenetic_pulse 
+    lightning_cost: f32,
+
+    basic_power: f32,           // how much damage each will do. 
+    kenetic_pulse_power: f32,
+    lightning_power: f32,
+
 }
 
 
@@ -45,7 +54,7 @@ impl PlayerCharacter {
     /// player (keybaord input & mouse input)
     /// 
     /// Call this function every frame out whatever -you know.
-    pub fn update(&mut self, delta_time: f32) {
+    pub fn update(&mut self, delta_time: f32, environment: &mut Environment) {
 
         // update position in the world accoarding to movement input
         if is_key_down(KeyCode::D) {
@@ -68,6 +77,11 @@ impl PlayerCharacter {
         if is_key_released(KeyCode::LeftShift) {
             self.end_sprint();
         }
+
+        // attacking
+        if is_mouse_button_released(MouseButton::Left) {
+            self.cast_spell(Spell::Basic, environment);
+        }
     }
 
     /// Default Constructor | Get a fresh player character.
@@ -82,9 +96,17 @@ impl PlayerCharacter {
             current_health: 100.0,
             max_health: 100.0,
 
-            is_oom: false,
             current_mana: 100.0,
             max_mana: 100.0,
+
+            basic_cost: 0.0,
+            kenetic_pulse_cost: 10.0,
+            lightning_cost: 30.0,
+
+            basic_power: 15.0,
+            kenetic_pulse_power: 25.0,
+            lightning_power: 100.0,
+
         }
     }
     // TODO: A fix is needed. See Trello. Remove this when resolved.
@@ -93,12 +115,13 @@ impl PlayerCharacter {
 
     /// Use this procedure to move the PlayerCharacter around in the world accoarding to arrow key input.
     pub fn translate(&mut self, d: Direction, mut deltat: f32) {
-        deltat /= 1000.0;
+        deltat /= 1000.0; // this is importatnt because `deltat` comes in in milliseconds
+                          // we need it in seconds. 
         match d {
-            Direction::Right => self.position.x = self.position.x + 1.0 * self.speed * deltat,
-            Direction::Left => self.position.x = self.position.x - 1.0 * self.speed * deltat,
-            Direction::Up => self.position.y = self.position.y + 1.0 * self.speed * deltat,
-            Direction::Down => self.position.y = self.position.y - 1.0 * self.speed * deltat,
+            Direction::Right => self.position.x += 1.0 * self.speed * deltat,
+            Direction::Left  => self.position.x -= 1.0 * self.speed * deltat,
+            Direction::Up    => self.position.y += 1.0 * self.speed * deltat,
+            Direction::Down  => self.position.y -= 1.0 * self.speed * deltat,
         }
     }
 
@@ -111,6 +134,7 @@ impl PlayerCharacter {
         self.speed = self.normal_speed;
     }
 
+    /// PlayerCharacter position getter
     pub fn get_position(&self) -> Vec2 {
         self.position
     }
@@ -148,7 +172,6 @@ impl PlayerCharacter {
             self.current_mana = self.current_mana - amount;
         } else {
             self.current_mana = 0.0;
-            self.is_oom = true;
         }
     }
     /// Safely increases mana of a player character by amount.
@@ -158,21 +181,28 @@ impl PlayerCharacter {
         } else {
             self.current_mana = self.max_mana;
         }
-        self.is_oom = false;
     }
 
-    /// Safely handles an attempt to cast a spell. Returns whether or not is possible
-    pub fn can_cast(&mut self, spell: Spell) -> bool {
+    /// Safely handles an attempt to cast a spell. Returns whether or
+    /// not the player character has sufficient mana to cast the spell. 
+    pub fn can_cast(& self, spell: &Spell) -> bool {
         match spell {
-            Spell::KeneticPulse => {
-                if self.current_mana >= KENETIC_PULSE_COST {
+            Spell::Basic => {
+                if self.current_mana >= self.basic_cost {
+                    return true;
+                } else {
+                    return false;      // I don't have to use the getter here .get_mana_cost()
+                }                      // because we already know which cost it is in each case.
+            }                          // Also, that would be slower.
+            Spell::KeneticPulse => {    
+                if self.current_mana >= self.kenetic_pulse_cost {
                     return true;
                 } else {
                     return false;
                 }
             }
             Spell::Lightning => {
-                if self.current_mana >= LIGHTNING_COST {
+                if self.current_mana >= self.lightning_cost {
                     return true;
                 } else {
                     return false;
@@ -181,7 +211,39 @@ impl PlayerCharacter {
         }
     }
 
+    /// Reutrns the mana cost of a spell for a player. 
+    pub fn get_mana_cost(&self, spell: &Spell) -> f32 {
+        match spell {
+            Spell::Basic        => self.basic_cost,
+            Spell::KeneticPulse => self.kenetic_pulse_cost,
+            Spell::Lightning    => self.lightning_cost,
+        }
+    }
+
+    /// Returns the power of a spell for a player
+    pub fn get_spell_power(&self, spell: &Spell) -> f32 {
+        match spell {
+            Spell::Basic        => self.basic_power,
+            Spell::KeneticPulse => self.kenetic_pulse_power,
+            Spell::Lightning    => self.lightning_power,
+        }
+    }
+
+    /// Call this when a spell is needed to be cast, like on a mouse event or key input.
+    /// Let it know the spell you want to cast and the environment in which the projectile will be added to.
+    pub fn cast_spell(&mut self, spell: Spell, environment:  &mut Environment) {
+
+        if self.can_cast(&spell) {
+
+            self.drain( self.get_mana_cost( &spell ) );
+
+            environment.player_projectiles.push(PlayerProjectile::new(self, Vec2{x: 1.0, y: 0.0}, spell)) 
+        }
+    }
+
     pub fn get_mana(&self) -> f32 {
         self.current_mana
     }
+
+
 }

@@ -71,29 +71,34 @@ impl EnemyCharacter {
 
     /// Use this procedure to move the EnemyCharacter around in the world.
     /// needs a unit vector as a direction to move in.
-    pub fn translate(&mut self, unit_vector: Vec2, mut deltat: f32) {
+    pub fn translate(&mut self, unit_vector: Vec2, mut delta_time: f32) {
         
-        deltat /= 1000.0;
+        delta_time /= 1000.0; // this is importatnt because `delta_time` comes in in milliseconds
 
-        self.position.x = self.position.x + unit_vector.x * self.speed * deltat;
-        self.position.y = self.position.y + unit_vector.y * self.speed * deltat;
+        self.position.x = self.position.x + unit_vector.x * self.speed * delta_time;
+        self.position.y = self.position.y + unit_vector.y * self.speed * delta_time;
     
     }
 
     /// efficiently makes an enemy follow a player.
-    pub fn move_towards_player(&mut self, player_character: &PlayerCharacter, deltat: f32) {
+    pub fn move_towards_player(&mut self, player_character: &PlayerCharacter, delta_time: f32) {
 
+        // Just a vector that is that is the distance and direction of the player
+        // from the enemy. 
         let vector_to_player: Vec2  = Vec2 {
             x: player_character.get_position().x - self.get_position().x,
             y: player_character.get_position().y - self.get_position().y,
         };
 
+        // turning the vector into just a direction and got rid of the magnitude. 
+        // It was unneeded for our implementation of the .translate() procedure. 
         let unit_vec = vector_to_player / vector_to_player.x.hypot(vector_to_player.y);
 
-        self.translate(unit_vec, deltat);
+        self.translate(unit_vec, delta_time);
 
     }
 
+    /// EnemyCharacter Position Value Getter -> Vec2<f32>
     pub fn get_position(&self) -> Vec2 {
         self.position
     }
@@ -119,17 +124,26 @@ impl EnemyCharacter {
         }
     }
 
+    /// EnemyCharacter Health Stat Getter. 
     pub fn get_health(&self) -> f32 {
         self.current_health
     }
 
-    // Really is all that it sounds like. Pick a character to attack. Some sort of collision
-    // is intended to precede this call.
+    /// Really is all that it sounds like. Pick a character to attack. Some sort of collision
+    /// is intended to precede this call.
     pub fn basic_attack(&mut self, player_character: &mut PlayerCharacter) {
+
+        // Might as well change this to 1.0 at some point. For now the basic attacks will
+        // onlly for 75% of the power that an EnemyCharacter Instance possesses. 
         let basic_attack_scale_factor: f32 = 0.75;
 
         let attack_amount: f32 = self.power * basic_attack_scale_factor;
 
+        // The enemy type matters here. Normally, it would just be a basic attack that scales
+        // off of the power of the EnemyCharacter instance that is attacking... But we are 
+        // going to do it a bit different! This way, if a special interaction is needed when 
+        // The enemy attacks, it can be added here. Look! The `Drinker` Type already has one:
+        // It heals for the amount that it attacks for. 
         match self.enemy_type {
             EnemyType::Ghoul => player_character.hurt(attack_amount),
             EnemyType::Phantom => player_character.hurt(attack_amount),

@@ -1,21 +1,34 @@
-use std::{time::{SystemTime, UNIX_EPOCH}, thread::AccessError};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use macroquad::prelude::*;
 
 pub mod player_character;
 use player_character::*;
 
+pub mod player_projectile;
+use player_projectile::*;
+
 pub mod enemy_character;
 use enemy_character::*;
+
+pub mod environment;
+use environment::*;
+
+
 
 const TILE_WIDTH: f32 = 16.0; // pixels
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
+
     // initialize the player's character
     let mut player = PlayerCharacter::new();
+
     // initalize an enemy
     let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 1.0, y: 1.0 });
+
+    // lets make and environment to put all our things in.
+    let mut environment = Environment::new();
 
     set_fullscreen(true);
 
@@ -29,6 +42,7 @@ async fn main() {
 
     // While game is running...
     loop {
+
         // delta time calculations
         real_delta_time   = system_time() - last_update_time;
         last_update_time += real_delta_time;
@@ -46,7 +60,12 @@ async fn main() {
             // ghoul pahtfinding
             ghoul.move_towards_player(&player, target_time_frame as f32);
     
-            player.update(target_time_frame as f32);
+            player.update(target_time_frame as f32, &mut environment);
+            
+            // update projectiles
+            for proj in environment.player_projectiles.iter_mut() {
+                proj.update(target_time_frame as f32);
+            }
     
             // Allow exiting
             if is_key_down(KeyCode::Escape) {
@@ -68,6 +87,11 @@ async fn main() {
         // draw enemy
         draw_enemy_character(&ghoul, &player, WHITE);
 
+        // draw projectiles
+        for proj in environment.player_projectiles.iter() {
+            draw_player_projectile(proj, &player, BLUE);
+        }
+
         // Basic Play UI and Debug Information.
         draw_gui(&player);
 
@@ -87,6 +111,11 @@ pub fn convert_to_screen_coords(
         x: (world_coords.x - center.get_position().x) * tile_width + screen_width() / 2.0,
         y: (world_coords.y - center.get_position().y) * -1.0 * tile_width + screen_height() / 2.0,
     }
+}
+
+// TODO: So we can click on the screen to shoot
+pub fn convert_to_world_coords() {
+
 }
 
 // crappy functions that will draw characters as a circles on the screen. Horrendous... Oh Well!
@@ -117,6 +146,22 @@ pub fn draw_enemy_character(
     draw_circle(
         character_screen_position.x,
         character_screen_position.y,
+        8.0,
+        c,
+    );
+}
+
+// draw player projectile
+pub fn draw_player_projectile(
+    projectile: &PlayerProjectile,
+    perspective_from: &PlayerCharacter,
+    c: Color,
+) {
+    let proj_screen_position: Vec2 =
+        convert_to_screen_coords(projectile.get_position(), &perspective_from, TILE_WIDTH);
+    draw_circle(
+        proj_screen_position.x,
+        proj_screen_position.y,
         8.0,
         c,
     );
