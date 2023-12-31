@@ -26,7 +26,7 @@ async fn main() {
         // Clear screen
         clear_background(BLACK);
 
-        draw_map_test(map);
+        draw_map_test(&map);
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) {
