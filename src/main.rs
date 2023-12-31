@@ -9,8 +9,8 @@ use tiles::*;
 fn window_conf() -> Conf {
     Conf {
         window_title: "Rust Game".to_owned(),
-        window_width: 640,
-        window_height: 480,
+        window_width: 1280,
+        window_height: 720,
         fullscreen: false,
         ..Default::default()
     }
@@ -21,11 +21,12 @@ fn window_conf() -> Conf {
 async fn main() {
 
     init_tile_atlas();
+    let map = gen_map_chunk(0.80);
     loop {
         // Clear screen
         clear_background(BLACK);
 
-        draw_map_test();
+        draw_map_test(map);
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) {
