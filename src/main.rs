@@ -6,7 +6,7 @@ use player_character::*;
 pub mod enemy_character;
 use enemy_character::*;
 
-const TILE_WIDTH: f32 = 64.0; // pixels
+const TILE_WIDTH: f32 = 16.0; // pixels
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
@@ -15,56 +15,28 @@ async fn main() {
     // initalize an enemy
     let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 1.0, y: 1.0 });
 
-    // Let's throw them in lists to iterate through...
-
-    let mut allies: Vec<&mut PlayerCharacter> = Vec::new(); // gonna do something with these later.
-    let mut enemies: Vec<&mut EnemyCharacter> = Vec::new(); // Although, not really sure it's the best
-                                                            // way to go about it... Oh Well!
     set_fullscreen(true);
 
     // gme loop crap
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
-
     let mut last_update_time: f32 = get_time() as f32;
     let game_time_factor: f32 = 1.0;
 
     loop {
-        // EXAMPLE GAME LOOP STRUCTURE
-        // 1. input
-        // 2. update
-        // 3. draw
-
         // delta time calculations
         let real_delta_time = get_time() as f32 - last_update_time;
         last_update_time = last_update_time + real_delta_time;
         let game_delta_time: f32 = real_delta_time * game_time_factor;
-
-        /* INPUT */
-        // handled for us by macro quad.
+        // EXAMPLE GAME LOOP STRUCTURE
+        // 1. input (handled by macroquad)
+        // 2. update (we do this)
+        // 3. draw   (we also do this)
 
         /* UPDATE */
-        // arrow moevemnt
+
+        // ghoul pahtfinding
         ghoul.move_towards_player(&player, game_delta_time);
-
-        if is_key_down(KeyCode::D) {
-            player.translate(Direction::Right, game_delta_time);
-        }
-        if is_key_down(KeyCode::A) {
-            player.translate(Direction::Left, game_delta_time);
-        }
-        if is_key_down(KeyCode::W) {
-            player.translate(Direction::Up, game_delta_time);
-        }
-        if is_key_down(KeyCode::S) {
-            player.translate(Direction::Down, game_delta_time);
-        }
-
-        if is_key_pressed(KeyCode::LeftShift) {
-            player.begin_sprint();
-        }
-        if is_key_released(KeyCode::LeftShift) {
-            player.end_sprint();
-        }
+        player.update(game_delta_time);
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) {
@@ -72,6 +44,7 @@ async fn main() {
         }
 
         /* DRAW */
+        
         // Clear screen
         clear_background(BLACK);
 
@@ -115,7 +88,7 @@ pub fn draw_player_character(
     draw_circle(
         character_screen_position.x,
         character_screen_position.y,
-        32.0,
+        8.0,
         c,
     );
 } // I can't get the generics/templating to work so I just made two different functions, ... Works for now ig. Jeez.
@@ -130,7 +103,7 @@ pub fn draw_enemy_character(
     draw_circle(
         character_screen_position.x,
         character_screen_position.y,
-        32.0,
+        8.0,
         c,
     );
 }

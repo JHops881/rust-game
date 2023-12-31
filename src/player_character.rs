@@ -1,7 +1,6 @@
 use macroquad::math::Vec2;
 // Vec2 Docs: https://docs.rs/macroquad/latest/macroquad/math/struct.Vec2.html
-
-
+use macroquad::input::*;
 
 pub enum Direction {
     Right,
@@ -40,6 +39,37 @@ const PLAYER_JOG_SPEED:    f32 = 2.68;
 const PLAYER_SPRINT_SPEED: f32 = 2.0 * PLAYER_JOG_SPEED;
 
 impl PlayerCharacter {
+
+    /// Update procedure obviously takes care of changing the internal state of a PlayerCharacter
+    /// instance accoaring to both input from other variables ingame and input from the human
+    /// player (keybaord input & mouse input)
+    /// 
+    /// Call this function every frame out whatever -you know.
+    pub fn update(&mut self, delta_time: f32) {
+
+        // update position in the world accoarding to movement input
+        if is_key_down(KeyCode::D) {
+            self.translate(Direction::Right, delta_time);
+        }
+        if is_key_down(KeyCode::A) {
+            self.translate(Direction::Left, delta_time);
+        }
+        if is_key_down(KeyCode::W) {
+            self.translate(Direction::Up, delta_time);
+        }
+        if is_key_down(KeyCode::S) {
+            self.translate(Direction::Down, delta_time);
+        }
+
+        // Sprinting Contol.
+        if is_key_pressed(KeyCode::LeftShift) {
+            self.begin_sprint();
+        }
+        if is_key_released(KeyCode::LeftShift) {
+            self.end_sprint();
+        }
+    }
+
     /// Default Constructor | Get a fresh player character.
     pub fn new() -> PlayerCharacter {
         PlayerCharacter {
