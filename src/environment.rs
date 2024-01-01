@@ -26,10 +26,11 @@ impl Environment {
     /// default constructor
     pub fn new() -> Environment {
         Environment {
-            player_characters: Vec::new(),
+
+            player_characters:  Vec::new(),
             player_projectiles: Vec::new(),
 
-            enemy_characters: Vec::new(),
+            enemy_characters:   Vec::new(),
         }
 
     }
@@ -42,3 +43,13 @@ impl Environment {
     }
 }
 
+
+
+/* Note to sel:
+    The problem right now is that the farthere away from 0,0 you go, the more nessed up the 
+    shooting is. I was trying to diagnose the issue by printing the values of player and shot
+    when clicking. 
+
+    ive already foung that the macoquad library is registering signle key presses (i.g. mouse release)
+    twice. We are looking ito that currently. 
+*/

@@ -1,8 +1,9 @@
+
 use macroquad::math::Vec2;
 // Vec2 Docs: https://docs.rs/macroquad/latest/macroquad/math/struct.Vec2.html
 use macroquad::input::*;
 
-use crate::{environment::{self, Environment}, player_projectile::PlayerProjectile};
+use crate::{environment::Environment, player_projectile::PlayerProjectile, convert_to_world_coords, TILE_WIDTH};
 
 pub enum Direction {
     Right,
@@ -79,8 +80,21 @@ impl PlayerCharacter {
         }
 
         // attacking
-        if is_mouse_button_released(MouseButton::Left) {
-            self.cast_spell(Spell::Basic, environment);
+        if is_mouse_button_pressed(MouseButton::Left) {
+
+            // vector containing mouse position on screen in pixels
+            let (x, y) = mouse_position();
+
+            // where the click was but now in the world coordinates
+            let clicked_pos: Vec2 = convert_to_world_coords(Vec2{x,y}, &self, TILE_WIDTH);
+
+            // where the click happened, but now relative to the player (world coords)
+            let vec_from_player: Vec2 = clicked_pos - self.get_position();
+
+            // divided by magnitude to get unit vector
+            let d: Vec2 = vec_from_player / vec_from_player.x.hypot(vec_from_player.y);
+
+            self.cast_spell(Spell::Basic, d, environment);
         }
     }
 
@@ -231,13 +245,13 @@ impl PlayerCharacter {
 
     /// Call this when a spell is needed to be cast, like on a mouse event or key input.
     /// Let it know the spell you want to cast and the environment in which the projectile will be added to.
-    pub fn cast_spell(&mut self, spell: Spell, environment:  &mut Environment) {
+    pub fn cast_spell(&mut self, spell: Spell, direction: Vec2, environment:  &mut Environment) {
 
         if self.can_cast(&spell) {
 
             self.drain( self.get_mana_cost( &spell ) );
 
-            environment.player_projectiles.push(PlayerProjectile::new(self, Vec2{x: 1.0, y: 0.0}, spell)) 
+            environment.player_projectiles.push(PlayerProjectile::new(self, direction, spell)) 
         }
     }
 

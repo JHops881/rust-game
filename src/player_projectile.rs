@@ -28,7 +28,7 @@ impl PlayerProjectile {
 
             position: player.get_position(), // starts on the casting PlayerCharacter
             direction: direction,
-            speed: 1.0,
+            speed: 10.0,
 
             spell_type: spell,
         }

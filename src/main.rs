@@ -27,6 +27,12 @@ async fn main() {
     // initalize an enemy
     let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 1.0, y: 1.0 });
 
+    // for debugging
+    let mut ghoul2 = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 10.0, y: 10.0 });
+    let mut ghoul3 = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: -10.0, y: 10.0 });
+    let mut ghoul4 = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: -10.0, y: -10.0 });
+    let mut ghoul5 = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 10.0, y: -10.0 });
+
     // lets make and environment to put all our things in.
     let mut environment = Environment::new();
 
@@ -87,6 +93,11 @@ async fn main() {
         // draw enemy
         draw_enemy_character(&ghoul, &player, WHITE);
 
+        draw_enemy_character(&ghoul2, &player, PINK);
+        draw_enemy_character(&ghoul3, &player, ORANGE);
+        draw_enemy_character(&ghoul4, &player, YELLOW);
+        draw_enemy_character(&ghoul5, &player, GREEN);
+
         // draw projectiles
         for proj in environment.player_projectiles.iter() {
             draw_player_projectile(proj, &player, BLUE);
@@ -100,6 +111,7 @@ async fn main() {
 }
 
 /* Graphics functions. These need to be moved later on or deleted. Although, they work for now. 7:51pm 12/29/2023 */
+
 // Not my problem!
 /// use to convert the game world position of a character to a position on the screen.
 pub fn convert_to_screen_coords(
@@ -108,14 +120,22 @@ pub fn convert_to_screen_coords(
     tile_width: f32,
 ) -> Vec2 {
     Vec2 {
-        x: (world_coords.x - center.get_position().x) * tile_width + screen_width() / 2.0,
-        y: (world_coords.y - center.get_position().y) * -1.0 * tile_width + screen_height() / 2.0,
+        x:   (world_coords.x - center.get_position().x)
+           * tile_width 
+           + screen_width() / 2.0,
+        y:   (world_coords.y - center.get_position().y)
+           * -1.0
+           * tile_width
+           + screen_height() / 2.0,
     }
 }
 
-// TODO: So we can click on the screen to shoot
-pub fn convert_to_world_coords() {
-
+/// converts coordinates on the screen to world coordinates
+pub fn convert_to_world_coords(screen_coords: Vec2, center: &PlayerCharacter, tile_width: f32) -> Vec2 {
+    Vec2 {
+        x:  (screen_coords.x - screen_width() / 2.0) / tile_width + center.get_position().x ,
+        y: -(screen_coords.y - screen_height() / 2.0) / tile_width + center.get_position().y,
+    }
 }
 
 // crappy functions that will draw characters as a circles on the screen. Horrendous... Oh Well!
