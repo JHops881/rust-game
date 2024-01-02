@@ -1,9 +1,31 @@
+////////////////////////////////// IMPORTS ////////////////////////////////////
 
-use macroquad::math::Vec2;
-// Vec2 Docs: https://docs.rs/macroquad/latest/macroquad/math/struct.Vec2.html
-use macroquad::input::*;
 
-use crate::{environment::Environment, player_projectile::PlayerProjectile, convert_to_world_coords, TILE_WIDTH};
+use macroquad:: {
+    math::Vec2,
+    input:: {
+        is_key_down,
+        is_key_pressed,
+        is_key_released,
+        is_mouse_button_pressed,
+        mouse_position
+    },
+    miniquad:: {
+        KeyCode,
+        MouseButton
+    }
+};
+
+use crate:: {
+    graphics_math::convert_to_world_coords,
+    global_variables::{TILE_WIDTH, ENVIRONMENT_INSTANCE},
+    player_projectile::PlayerProjectile,
+};
+
+
+//////////////////////////////////// CODE /////////////////////////////////////
+
+
 
 pub enum Direction {
     Right,
@@ -55,7 +77,7 @@ impl PlayerCharacter {
     /// player (keybaord input & mouse input)
     /// 
     /// Call this function every frame out whatever -you know.
-    pub fn update(&mut self, delta_time: f32, environment: &mut Environment) {
+    pub fn update(&mut self, delta_time: f32) {
 
         // update position in the world accoarding to movement input
         if is_key_down(KeyCode::D) {
@@ -94,7 +116,7 @@ impl PlayerCharacter {
             // divided by magnitude to get unit vector
             let d: Vec2 = vec_from_player / vec_from_player.x.hypot(vec_from_player.y);
 
-            self.cast_spell(Spell::Basic, d, environment);
+            self.cast_spell(Spell::Basic, d);
         }
     }
 
@@ -245,13 +267,21 @@ impl PlayerCharacter {
 
     /// Call this when a spell is needed to be cast, like on a mouse event or key input.
     /// Let it know the spell you want to cast and the environment in which the projectile will be added to.
-    pub fn cast_spell(&mut self, spell: Spell, direction: Vec2, environment:  &mut Environment) {
+    pub fn cast_spell(&mut self, spell: Spell, direction: Vec2) {
 
         if self.can_cast(&spell) {
 
             self.drain( self.get_mana_cost( &spell ) );
 
-            environment.player_projectiles.push(PlayerProjectile::new(self, direction, spell)) 
+            let result = ENVIRONMENT_INSTANCE.lock();
+            match result {
+
+                Ok(mut env_inst) => env_inst.player_projectiles.push(PlayerProjectile::new(self, direction, spell)),
+                Err(poisoned) => panic!("Mutex is poisoned: {:?}", poisoned),
+
+            }
+
+             
         }
     }
 

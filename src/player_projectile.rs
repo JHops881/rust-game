@@ -1,6 +1,21 @@
 
-use crate::{player_character::*, system_time};
+////////////////////////////////// IMPORTS ////////////////////////////////////
+
+
 use macroquad::math::Vec2;
+
+use crate:: {
+    player_character:: {
+        Spell,
+        PlayerCharacter
+    },
+    system_time
+};
+
+
+//////////////////////////////////// CODE /////////////////////////////////////
+
+
 
 
 /// These things are the result of a player casting a spell. They fly through
