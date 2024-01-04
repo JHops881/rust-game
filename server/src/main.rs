@@ -72,7 +72,7 @@ async fn main() {
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
     let mut real_delta_time: f64;
     let mut last_update_time: f64 = system_time();
-    let target_time_frame: f64 = 8.33333; // 120 fps
+    let target_time_frame: f64 = 15.625; // 64 tick
     let mut accumulator: f64 = 0.0;
 
     // While game is running...

@@ -2,6 +2,7 @@ use macroquad::math::Vec2;
 
 use crate::global_variables::{IS_MAIN_CHARACTER_MADE, ZERO_FLOAT};
 
+/// A single struct that contains the data relevant to the playercharacter that the user of the client is playing as. 
 pub struct MainCharacterSingleton {
 
     position: Vec2,    // euclidian coordinates in the game world

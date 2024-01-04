@@ -10,8 +10,7 @@ use crate::global_variables::{TILE_WIDTH, MAIN_CHARACTER_INSTANCE};
 
 
 
-
-/// converts coordinates on the screen to world coordinates
+/// Depends on Glabal Variables: `MAIN_CHARACTER_INSTANCE` and `TILE_WIDTH`
 pub fn convert_to_world_coords(screen_coords: Vec2) -> Vec2 {
 
     let result = MAIN_CHARACTER_INSTANCE.lock();
@@ -34,9 +33,7 @@ pub fn convert_to_world_coords(screen_coords: Vec2) -> Vec2 {
 }
 
 
-
-
-/// use to convert the game world position of a character to a position on the screen.
+/// Depends on Glabal Variables: `MAIN_CHARACTER_INSTANCE` and `TILE_WIDTH`
 pub fn convert_to_screen_coords(world_coords: Vec2) -> Vec2 {
 
     let result = MAIN_CHARACTER_INSTANCE.lock();

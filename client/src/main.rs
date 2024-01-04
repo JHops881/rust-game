@@ -1,12 +1,15 @@
+use std::time::{UNIX_EPOCH, SystemTime};
+
 use global_variables::{MAIN_CHARACTER_INSTANCE, ZERO_FLOAT};
 use graphics_entity::{GraphicsEntity, GameEntity};
-use macroquad:: {miniquad::window::set_fullscreen,
+use macroquad:: {miniquad::{window::set_fullscreen, KeyCode},
     window:: {
         clear_background,
         next_frame
     }, 
-    color::BLACK, math::Vec2
+    color::BLACK, math::Vec2, input::is_key_down, prelude::rand
 };
+use server_update_object::ServerUpdateObject;
 
 
 pub mod global_variables;
@@ -15,6 +18,8 @@ pub mod graphics_procedure;
 pub mod graphics_entity;
 pub mod Graphics_Entity;
 pub mod main_character_singleton;
+pub mod server_update_object;
+pub mod client_info_object;
 
 
 
@@ -48,31 +53,70 @@ async fn main() {
 
     //let main_player: GraphicsEntity = GraphicsEntity {world_pos: MAIN_CHARACTER_INSTANCE.get_position_vec2(), entity_type: GameEntity::PlayerCharacter};
 
+    let mut ghoul: GraphicsEntity = GraphicsEntity { 
+        this_world_pos: Vec2 {
+            x: ZERO_FLOAT,
+            y: ZERO_FLOAT,
+        },
+        next_world_pos: Vec2 {
+            x: ZERO_FLOAT,
+            y: ZERO_FLOAT,
+        },
+        entity_type: GameEntity::Ghoul
+    };
 
-    let ghoul: GraphicsEntity = GraphicsEntity {world_pos: Vec2 {x: ZERO_FLOAT, y: ZERO_FLOAT}, entity_type: GameEntity::Ghoul};
+    let mut this_server_update: ServerUpdateObject;
+    let mut next_server_update: ServerUpdateObject;
 
-    let coin: GraphicsEntity = GraphicsEntity {world_pos: Vec2 {x: 20.0, y: 5.0}, entity_type: GameEntity::Coin};
+    next_server_update = simulate_server_update();
 
-    let lootbag: GraphicsEntity = GraphicsEntity {world_pos: Vec2 {x: -6.0, y: -9.6}, entity_type: GameEntity::LootBag};
+    let mut real_delta_time: f64;
+    let mut last_update_time: f64 = system_time();
+    let target_time_frame: f64 = /* 15.625; // 64 tick */ 1000.0; // 1 tick
+    let mut accumulator: f64 = 0.0;
 
     // While game is running...
     loop {
 
+        real_delta_time = system_time() - last_update_time;
+        last_update_time += real_delta_time;
+        accumulator += real_delta_time;
+
         // grab local input (macroquad will do this)
+
         // push local input to server
 
-        // recieve server state
+        
+        while accumulator > target_time_frame {
 
-        
-        
+            /* UPDATE */
+
+            // recieve server state
+            this_server_update = next_server_update;
+            next_server_update = simulate_server_update();
+
+            ghoul = GraphicsEntity { 
+                this_world_pos: this_server_update.ghoul_position,
+                next_world_pos: next_server_update.ghoul_position,
+                entity_type: GameEntity::Ghoul
+            };
+            
+
+            // Allow exiting
+            if is_key_down(KeyCode::Escape) {
+                std::process::exit(0);
+            }
+
+            accumulator -= target_time_frame;
+        }
 
         /* DRAW */
 
         // Clear screen
         clear_background(BLACK);
-        ghoul.draw();
-        coin.draw();
-        lootbag.draw();
+
+        ghoul.draw(accumulator / target_time_frame);
+      
 
 
         // Basic Play UI and Debug Information
@@ -84,4 +128,31 @@ async fn main() {
 /// pocedure to send client information to server
 fn send_client_info() {
 
+}
+
+
+fn simulate_server_update() -> ServerUpdateObject {
+    ServerUpdateObject {
+        ghoul_position: Vec2 {
+            x: rand::gen_range(-20.0, 20.0),
+            y: rand::gen_range(-20.0, 20.0),
+        }
+    }
+}
+
+
+
+
+/// Gives the current time in ms
+pub fn system_time() -> f64 {
+
+    // Get the current time
+    let now = SystemTime::now();
+
+    // Calculate the duration since the Unix epoch
+    let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
+
+    let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
+
+    return milliseconds;
 }

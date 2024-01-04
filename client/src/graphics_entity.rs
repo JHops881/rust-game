@@ -8,7 +8,7 @@ use crate::graphics_math::convert_to_screen_coords;
 
 
 
-// Anything that exists in the game world environment is a game entity.
+/// This represents each unique tangible animate or inanimate body that exists in the game. 
 pub enum  GameEntity {
 
     PlayerCharacter,
@@ -31,32 +31,58 @@ pub enum  GameEntity {
     
 }
 
-// A `GraphicsEntity` represents the graphical component of anything that is a `GameEntity` 
+/// This represents anything in the playbale game that exists in the game world and is drawn
 pub struct GraphicsEntity { 
 
-    pub world_pos: Vec2,
+    pub this_world_pos: Vec2,
+    pub next_world_pos: Vec2,
     pub entity_type: GameEntity
 
 }
 
+
 impl GraphicsEntity {
 
-    pub fn get_x(&self) -> f32 {
-        self.world_pos.x
+    /* THIS UPDATE */
+
+    /// returns current x coord
+    pub fn get_this_x(&self) -> f32 {
+        self.this_world_pos.x
+    }
+
+    /// returns current y coord
+    pub fn get_this_y(&self) -> f32 {
+        self.this_world_pos.y
+    }
+
+    /// returns vector with current x and y coord
+    pub fn get_this_position_vec2(&self) -> Vec2 {
+        self.this_world_pos
     }
 
 
-    pub fn get_y(&self) -> f32 {
-        self.world_pos.y
+    /* NEXT UPDATE */
+
+    /// returns current x coord
+    pub fn get_next_x(&self) -> f32 {
+        self.next_world_pos.x
     }
 
-    pub fn get_position_vec2(&self) -> Vec2 {
-        self.world_pos
+    /// returns current y coord
+    pub fn get_next_y(&self) -> f32 {
+        self.next_world_pos.y
+    }
+
+    /// returns vector with current x and y coord
+    pub fn get_next_position_vec2(&self) -> Vec2 {
+        self.next_world_pos
     }
 
 
 
-    pub fn draw(&self) {
+    /// displays graphical entity on the screen to the user. Logic is handled internally,
+    /// there is no need to be concerned with what it is. 
+    pub fn draw(&self, t: f64) {
 
         let color: Color = match self.entity_type {
             GameEntity::PlayerCharacter => WHITE,
@@ -72,9 +98,14 @@ impl GraphicsEntity {
             GameEntity::LootBag         => PINK,
         };
 
-        let world_coords: Vec2 = self.get_position_vec2();
+        // linear interpolation. 
 
-        let screen_coord: Vec2 = convert_to_screen_coords(world_coords);
+
+        let lerp_coords: Vec2 = self.get_this_position_vec2() + (self.get_next_position_vec2() - self.get_this_position_vec2()) * t as f32;
+
+        // let lerp_coords: Vec2 = self.get_this_position_vec2();
+
+        let screen_coord: Vec2 = convert_to_screen_coords(lerp_coords);
 
         draw_circle(screen_coord.x, screen_coord.y, 8.0, color);
 
