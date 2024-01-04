@@ -17,6 +17,7 @@ use crate:: {
 ///
 /// Pretty cool Right!? Be nice to you environment.
 pub struct EnvironmentSingleton {
+
     // allies
     pub player_characters: Vec<PlayerCharacter>,
     pub player_projectiles: Vec<PlayerProjectile>,
@@ -38,9 +39,11 @@ impl EnvironmentSingleton {
                 IS_ENVIRONNMENT_MADE = true;
 
                 return EnvironmentSingleton {
-                    player_characters: Vec::new(),
+
+                    player_characters:  Vec::new(),
                     player_projectiles: Vec::new(),
-                    enemy_characters: Vec::new(),
+                    enemy_characters:   Vec::new(),
+
                 };
 
             } else {
@@ -50,11 +53,32 @@ impl EnvironmentSingleton {
             }
         }
     }
-}
 
-// TODO: MAKE
-impl EnvironmentSingleton {
+
+
+    pub fn update(&mut self, delta_time: f32, ) {
+        
+        // update players
+        for player_character in self.player_characters.iter_mut() {
+            player_character.update(delta_time);
+        }
+
+        // update plyaer projectiles
+        for proj in self.player_projectiles.iter_mut() {
+            proj.update(delta_time);
+        }
+
+    }
+
+
+
     pub fn cull_expired_projectiles(&mut self) {
         ()
     }
+
+    
 }
+
+
+
+   

@@ -25,6 +25,8 @@ pub struct EnemyCharacter {
 }
 
 impl EnemyCharacter {
+
+
     /// This will Construct and return an EnemyCharacter with corresponding stats
     /// based on what type you make it. For now, this is also where those stats are
     /// decided, meaning balance changes to enemy types can be tweaked here.
@@ -68,6 +70,9 @@ impl EnemyCharacter {
             },
         }
     }
+
+
+    pub fn update() {}
 
     /// Use this procedure to move the EnemyCharacter around in the world.
     /// needs a unit vector as a direction to move in.

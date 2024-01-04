@@ -17,7 +17,6 @@ use macroquad:: {
 };
 
 use crate:: {
-    graphics_math::convert_to_world_coords,
     global_variables::{TILE_WIDTH, ENVIRONMENT_INSTANCE},
     player_projectile::PlayerProjectile,
 };
@@ -43,32 +42,36 @@ pub enum Spell {
 
 // Star of the show!
 pub struct PlayerCharacter {
+
     position: Vec2,    // euclidian coordinates in the game world
-    speed: f32,        // current speed in m/s
-    normal_speed: f32, // jogging speed, just using WASD
-    sprint_speed: f32, // 2x the normal speed, hold shift to access
+    
+    speed_stat:  f32, // jogging speed
+    health_stat: f32, // max health
+    mana_stat:   f32, // max mana
+    power_stat:  f32, // attack power
+    vitality_stat:  f32, // health regen in hp/s
+    wisdom_stat:    f32, // mana regen   in mana/s
+    dexterity_stat: f32, // attack speed  attacks/s
+    defense_stat:   f32, // flat damage reduction
+
+    current_speed:  f32, // in m/s
+    current_health: f32,  
+    current_mana:   f32,
 
     is_dead: bool,
-    current_health: f32,
-    max_health: f32,
-
-    current_mana: f32,
-    max_mana: f32,
+    is_sprinting: bool,
 
     basic_cost: f32,          // mana cost of basic attack
     kenetic_pulse_cost: f32,  // ... kenetic_pulse 
     lightning_cost: f32,
 
-    basic_power: f32,           // how much damage each will do. 
-    kenetic_pulse_power: f32,
-    lightning_power: f32,
+    basic_power_multi: f32,          // a value that deterimes how much damage 
+    kenetic_pulse_power_multi: f32,  // it will do. It's a multiplier.
+    lightning_power_multi: f32,      // damage = power_stat * value
 
 }
 
 
-
-const PLAYER_JOG_SPEED:    f32 = 2.68;
-const PLAYER_SPRINT_SPEED: f32 = 2.0 * PLAYER_JOG_SPEED;
 
 impl PlayerCharacter {
 
@@ -122,26 +125,35 @@ impl PlayerCharacter {
 
     /// Default Constructor | Get a fresh player character.
     pub fn new() -> PlayerCharacter {
+
+        let initial_speed: f32 = 2.68;
+
         PlayerCharacter {
-            position: Vec2 { x: 0.0, y: 0.0 },
-            speed: PLAYER_JOG_SPEED,
-            normal_speed: PLAYER_JOG_SPEED,
-            sprint_speed: PLAYER_SPRINT_SPEED,
-
+            position: Vec2{x:0.0, y:0.0},    
+    
+            speed_stat:  initial_speed,
+            health_stat: 100.0,
+            mana_stat:   100.0,
+            power_stat:  10.0,
+            vitality_stat:  1.0, 
+            wisdom_stat:    2.5,
+            dexterity_stat: 2.0, 
+            defense_stat:   0.0, 
+        
+            current_speed:  initial_speed,
+            current_health: 1.0,  
+            current_mana:   1.0,
+        
             is_dead: false,
-            current_health: 100.0,
-            max_health: 100.0,
-
-            current_mana: 100.0,
-            max_mana: 100.0,
-
-            basic_cost: 0.0,
-            kenetic_pulse_cost: 10.0,
+            is_sprinting: false,
+        
+            basic_cost: 0.0,         
+            kenetic_pulse_cost: 10.0, 
             lightning_cost: 30.0,
-
-            basic_power: 15.0,
-            kenetic_pulse_power: 25.0,
-            lightning_power: 100.0,
+        
+            basic_power_multi: 1.0,           
+            kenetic_pulse_power_multi: 2.0,
+            lightning_power_multi: 5.0,
 
         }
     }
@@ -154,20 +166,33 @@ impl PlayerCharacter {
         deltat /= 1000.0; // this is importatnt because `deltat` comes in in milliseconds
                           // we need it in seconds. 
         match d {
-            Direction::Right => self.position.x += 1.0 * self.speed * deltat,
-            Direction::Left  => self.position.x -= 1.0 * self.speed * deltat,
-            Direction::Up    => self.position.y += 1.0 * self.speed * deltat,
-            Direction::Down  => self.position.y -= 1.0 * self.speed * deltat,
+            Direction::Right => self.position.x += 1.0 * self.current_speed * deltat,
+            Direction::Left  => self.position.x -= 1.0 * self.current_speed * deltat,
+            Direction::Up    => self.position.y += 1.0 * self.current_speed * deltat,
+            Direction::Down  => self.position.y -= 1.0 * self.current_speed * deltat,
         }
     }
 
     /// toggles sprinting of player on
     pub fn begin_sprint(&mut self) {
-        self.speed = self.sprint_speed;
+        match self.is_sprinting {
+            true => (),
+            false => { 
+                self.is_sprinting = true;
+                self.current_speed = 2.0 * self.speed_stat;
+            }
+        }
+        
     }
     /// toggles sprinting of player off
     pub fn end_sprint(&mut self) {
-        self.speed = self.normal_speed;
+        match self.is_sprinting {
+            true => {
+                self.is_sprinting = false;
+                self.current_speed = self.speed_stat;
+            },
+            false =>()
+        }
     }
 
     /// PlayerCharacter position getter
@@ -189,10 +214,10 @@ impl PlayerCharacter {
     }
     /// Increase a player character health by amount. Cannot overheal (exceed max hp value)
     pub fn heal(&mut self, amount: f32) {
-        if self.current_health + amount < self.max_health {
+        if self.current_health + amount < self.health_stat {
             self.current_health = self.current_health + amount;
         } else {
-            self.current_health = self.max_health;
+            self.current_health = self.health_stat;
         }
     }
 
@@ -212,10 +237,10 @@ impl PlayerCharacter {
     }
     /// Safely increases mana of a player character by amount.
     pub fn energize(&mut self, amount: f32) {
-        if self.current_mana + amount < self.max_mana {
-            self.max_mana = self.max_mana + amount;
+        if self.current_mana + amount < self.mana_stat {
+            self.mana_stat = self.mana_stat + amount;
         } else {
-            self.current_mana = self.max_mana;
+            self.current_mana = self.mana_stat;
         }
     }
 
@@ -259,9 +284,9 @@ impl PlayerCharacter {
     /// Returns the power of a spell for a player
     pub fn get_spell_power(&self, spell: &Spell) -> f32 {
         match spell {
-            Spell::Basic        => self.basic_power,
-            Spell::KeneticPulse => self.kenetic_pulse_power,
-            Spell::Lightning    => self.lightning_power,
+            Spell::Basic        => self.basic_power_multi,
+            Spell::KeneticPulse => self.kenetic_pulse_power_multi,
+            Spell::Lightning    => self.lightning_power_multi,
         }
     }
 

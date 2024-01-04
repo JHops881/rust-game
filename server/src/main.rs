@@ -4,7 +4,7 @@ pub mod player_projectile;
 
 pub mod enemy_character;
 
-pub mod character_factory;
+pub mod game_entity_factory;
 
 pub mod environment_singleton;
 
@@ -25,6 +25,7 @@ use enemy_character:: {
     EnemyType
 };
 
+use game_entity_factory::GameEntityFactory;
 use global_variables::ENVIRONMENT_INSTANCE;
 use graphics_procedure:: {
     draw_enemy_character,
@@ -36,12 +37,8 @@ use macroquad:: {
     color:: {
         BLACK,
         BLUE,
-        GREEN,
-        ORANGE,
-        PINK,
         RED,
         WHITE,
-        YELLOW
     },
     input::is_key_down,
     math::Vec2,
@@ -55,8 +52,6 @@ use macroquad:: {
     },
 };
 
-use player_character::PlayerCharacter;
-
 
 //////////////////////////////////// CODE /////////////////////////////////////
 
@@ -66,7 +61,7 @@ use player_character::PlayerCharacter;
 async fn main() {
 
     // initialize the player's character
-    let mut player = PlayerCharacter::new();
+    GameEntityFactory::create_new_player_character();
 
     // initalize an enemy
     let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 1.0, y: 1.0 });
@@ -77,7 +72,6 @@ async fn main() {
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
     let mut real_delta_time: f64;
     let mut last_update_time: f64 = system_time();
-    let game_time_factor: f64 = 1.0;
     let target_time_frame: f64 = 8.33333; // 120 fps
     let mut accumulator: f64 = 0.0;
 
@@ -87,28 +81,22 @@ async fn main() {
         real_delta_time = system_time() - last_update_time;
         last_update_time += real_delta_time;
         accumulator += real_delta_time;
-        let game_delta_time: f32 = (real_delta_time * game_time_factor) as f32;
 
         // EXAMPLE GAME LOOP STRUCTURE
         // 1. input (handled by macroquad)
         // 2. update (we do this)
         // 3. draw   (we also do this)
 
-        /* UPDATE */
+        
         while accumulator > target_time_frame {
             // ghoul pahtfinding
-            ghoul.move_towards_player(&player, target_time_frame as f32);
+            // ghoul.move_towards_player(&player, target_time_frame as f32);
 
-            player.update(target_time_frame as f32);
-
-            // update projectiles
+            /* UPDATE */
             let result = ENVIRONMENT_INSTANCE.lock();
             match result {
-                Ok(mut env_inst) => 
-                    for proj in env_inst.player_projectiles.iter_mut() {
-                        proj.update(target_time_frame as f32);
-                    }
-                Err(poisoned) => panic!("Mutex is poisoned: {:?}", poisoned),
+                Ok(mut env_inst) => env_inst.update(target_time_frame as f32),
+                Err(poisoned)    => panic!("Mutex is poisoned: {:?}", poisoned),
             }
             
 
@@ -160,9 +148,6 @@ pub fn system_time() -> f64 {
 
     // Calculate the duration since the Unix epoch
     let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    // Extract various components from the duration
-    let seconds = duration_since_epoch.as_secs();
 
     let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
 
