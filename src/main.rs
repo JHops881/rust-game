@@ -22,12 +22,14 @@ fn window_conf() -> Conf {
 async fn main() {
 
     init_tile_atlas();
-    let chunk = Chunk::new();
+    let chunk = Chunk::new(IVec2 { x: 0, y: 0 });
+    let chunk2 = Chunk::new(IVec2 { x: 1, y: 0 });
     loop {
         // Clear screen
         clear_background(BLACK);
 
         chunk.draw();
+        chunk2.draw();
 
         // Allow exiting
         if is_key_down(KeyCode::Escape) {

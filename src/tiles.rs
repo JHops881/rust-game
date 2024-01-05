@@ -4,10 +4,10 @@ use ::rand::{
     Rng,
 };
 use macroquad::prelude::*;
-use std::{f32::consts::PI, sync::OnceLock};
+use std::{f32::consts::PI, sync::OnceLock, time::{SystemTime, UNIX_EPOCH}};
 
 pub const TILE_SIDE_LENGTH: f32 = 16.0;
-pub const SCALE: f32 = 2.0;
+pub const SCALE: f32 = 3.0;
 pub const TILE_DIMENSIONS: macroquad::math::Vec2 = Vec2 {
     x: TILE_SIDE_LENGTH * SCALE,
     y: TILE_SIDE_LENGTH * SCALE,
@@ -18,7 +18,7 @@ static TILE_ATLAS: OnceLock<Texture2D> = OnceLock::new();
 /// Load in the tile atlas for use in future calls
 pub fn init_tile_atlas() {
     let atlas = Texture2D::from_file_with_format(
-        include_bytes!("../assets/atlas/atlas2.png"),
+        include_bytes!("../assets/atlas/atlas3.png"),
         Some(ImageFormat::Png),
     );
     atlas.set_filter(FilterMode::Nearest);
@@ -46,10 +46,13 @@ pub struct Tile {
 }
 
 /// Which type of tile will be shown. E.g. ground, water, wood, etc.
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
     None,
+    Water,
     Ground,
+    // Grass,
+    Wood,
 }
 
 /// The base shape of the tile given how it connects to the tiles around it.
@@ -368,6 +371,23 @@ impl Tile {
             (Ground, Corner) => (112.0, 16.0),
             (Ground, DentedCorner) => (112.0, 32.0),
             (Ground, Island) => (80.0, 32.0),
+
+            (Wood, Center) => (0.0, 32.0),
+            (Wood, DentedCenter) => (0.0, 64.0),
+            (Wood, DoubleDentedCenter) => (16.0, 64.0),
+            (Wood, CrossDentedCenter) => (48.0, 64.0),
+            (Wood, TripleDentedCenter) => (32.0, 64.0),
+            (Wood, Junction) => (64.0, 64.0),
+            (Wood, Edge) => (32.0, 48.0),
+            (Wood, DentedEdge) => (48.0, 48.0),
+            (Wood, DoubleDentedEdge) => (64.0, 48.0),
+            (Wood, Straight) => (80.0, 48.0),
+            (Wood, Peninsula) => (96.0, 48.0),
+            (Wood, Corner) => (112.0, 48.0),
+            (Wood, DentedCorner) => (112.0, 64.0),
+            (Wood, Island) => (80.0, 64.0),
+
+            (Water, _) => (0.0, 80.0),
         }
     }
 
@@ -387,7 +407,21 @@ impl Tile {
 
     /// Draw a tile to the screen
     pub fn draw(&self, position: Vec2) {
+
         let (x, y) = self.get_texture_coords();
+
+        // Offset the x texture coord based on time. Animates tiles. 
+        let x = x + match self.tile_type {
+            TileType::Water => {
+                let current_second: u64 = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Time went backwards")
+                    .as_secs();
+                (current_second & 0x11) as f32 * TILE_SIDE_LENGTH
+            },
+            _ => 0.0,
+        };
+        
         let (rotation, flip_x, flip_y) = self.get_texture_rotation();
 
         let draw_params = DrawTextureParams {
@@ -407,6 +441,8 @@ impl Tile {
         // let color = Color::from_rgba(0x0b, 0x46, 0x23, 0xff);
         let color = WHITE;
         draw_texture_ex(get_tile_atlas(), position.x, position.y, color, draw_params);
+
+        // Wireframe each tile in green.
         draw_rectangle_lines(
             position.x,
             position.y,
