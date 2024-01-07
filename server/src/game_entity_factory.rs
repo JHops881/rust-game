@@ -48,11 +48,9 @@ impl GameEntityFactory {
         let ghoul: EnemyCharacter = EnemyCharacter::new(EnemyType::Ghoul, position);
 
         let result = ENVIRONMENT_INSTANCE.lock();
-
         match result {
 
             Ok(mut env_inst) => env_inst.enemy_characters.push(ghoul),
-
             Err(poisoned) => panic!("Mutex is poisoned: {:?}", poisoned),
         }
         
@@ -63,11 +61,9 @@ impl GameEntityFactory {
         let mut player = PlayerCharacter::new();
 
         let result = ENVIRONMENT_INSTANCE.lock();
-
         match result {
 
             Ok(mut env_inst) => env_inst.player_characters.push(player),
-
             Err(poisoned) => panic!("Mutex is poisoned: {:?}", poisoned),
         }
         

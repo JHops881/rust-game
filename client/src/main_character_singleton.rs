@@ -6,6 +6,7 @@ use crate::global_variables::{IS_MAIN_CHARACTER_MADE, ZERO_FLOAT};
 pub struct MainCharacterSingleton {
 
     position: Vec2,    // euclidian coordinates in the game world
+    id:       u32,
     
     speed_stat:  f32, // jogging speed
     health_stat: f32, // max health
@@ -36,16 +37,13 @@ pub struct MainCharacterSingleton {
 impl MainCharacterSingleton {
 
     pub fn new() -> Self {
-
         unsafe {
-
             if IS_MAIN_CHARACTER_MADE == false {
-
                 IS_MAIN_CHARACTER_MADE = true;
-
                 MainCharacterSingleton {
-
-                    position: Vec2 {x: ZERO_FLOAT, y: ZERO_FLOAT},    
+    
+                    position: Vec2 {x: ZERO_FLOAT, y: ZERO_FLOAT},
+                    id:       123456789,
                     
                     speed_stat:  ZERO_FLOAT, 
                     health_stat: ZERO_FLOAT,

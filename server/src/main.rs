@@ -10,16 +10,15 @@ pub mod environment_singleton;
 
 pub mod global_variables;
 
-pub mod graphics_procedure;
 
-pub mod graphics_math;
 
 
 ////////////////////////////////// IMPORTS ////////////////////////////////////
 
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{time::{SystemTime, UNIX_EPOCH}, net::{UdpSocket, SocketAddr}, io};
 
+use bincode::{serialize, deserialize};
 use enemy_character:: {
     EnemyCharacter,
     EnemyType
@@ -27,46 +26,23 @@ use enemy_character:: {
 
 use game_entity_factory::GameEntityFactory;
 use global_variables::ENVIRONMENT_INSTANCE;
-use graphics_procedure:: {
-    draw_enemy_character,
-    draw_gui,
-    draw_player_character,
-    draw_player_projectile,
-};
-use macroquad:: {
-    color:: {
-        BLACK,
-        BLUE,
-        RED,
-        WHITE,
-    },
-    input::is_key_down,
-    math::Vec2,
-    miniquad:: {
-        window::set_fullscreen,
-        KeyCode
-    },
-    window:: {
-        clear_background,
-        next_frame
-    },
-};
+
+use macroquad::{math::Vec2, window::{clear_background, next_frame}, color::BLACK};
 
 
 //////////////////////////////////// CODE /////////////////////////////////////
 
-
-#[macroquad::main("BasicShapes")]
-
+#[macroquad::main("Game Server GUI")]   
 async fn main() {
 
-    // initialize the player's character
-    GameEntityFactory::create_new_player_character();
+    let mut connection_table: String = String::new();
+
+    // bind to any available local port
+    let socket = UdpSocket::bind("127.0.0.1:42110").expect("couldn't bind to address");
+    socket.set_nonblocking(true).expect("failed to make socket non-blocking");
 
     // initalize an enemy
-    let mut ghoul = EnemyCharacter::new(EnemyType::Ghoul, Vec2 { x: 1.0, y: 1.0 });
-
-    set_fullscreen(true);
+    GameEntityFactory::create_ghoul(Vec2 {x: 0.0, y: 0.0});
 
     // gme loop crap
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
@@ -81,63 +57,93 @@ async fn main() {
         real_delta_time = system_time() - last_update_time;
         last_update_time += real_delta_time;
         accumulator += real_delta_time;
-
-        // EXAMPLE GAME LOOP STRUCTURE
-        // 1. input (handled by macroquad)
-        // 2. update (we do this)
-        // 3. draw   (we also do this)
-
         
         while accumulator > target_time_frame {
-            // ghoul pahtfinding
-            // ghoul.move_towards_player(&player, target_time_frame as f32);
+
+            // get network message -> interperet it -> update game state
+            let result = recieve_net_message(&socket);
+            match result {
+                Some((ser_msg, src)) => {
+                    let message: String = proccess_net_message(ser_msg);
+                    match message.as_str() {
+                        "<ACT: U>" => {
+                            let result = ENVIRONMENT_INSTANCE.lock();
+                            match result {
+                            Ok(mut env_inst) => env_inst.enemy_characters[0].translate(Vec2 {x: 0.0, y: 1.0}, target_time_frame as f32),
+                            Err(poisoned)    => panic!("Mutex is poisoned: {:?}", poisoned),
+                            }
+                        },
+                        "<JOIN>"   => {
+                            connection_table = src.to_string();
+                            println!("Joined!");
+                            dbg!(&connection_table);
+                        },
+                        _ => (),
+                    }
+                },
+                None => (),
+            }
 
             /* UPDATE */
+            
             let result = ENVIRONMENT_INSTANCE.lock();
             match result {
-                Ok(mut env_inst) => env_inst.update(target_time_frame as f32),
+                Ok(mut env_inst) => env_inst.fixed_update(target_time_frame as f32), // this is it right here
                 Err(poisoned)    => panic!("Mutex is poisoned: {:?}", poisoned),
             }
-            
 
-            // Allow exiting
-            if is_key_down(KeyCode::Escape) {
-                std::process::exit(0);
+            let mut ghoul_pos: String = String::new();
+
+            let result = ENVIRONMENT_INSTANCE.lock();
+            match result {
+                Ok(env_inst) => ghoul_pos = env_inst.enemy_characters[0].get_position().y.to_string(),
+                Err(poisoned)    => panic!("Mutex is poisoned: {:?}", poisoned),
             }
 
+            send_net_message(&socket, ghoul_pos.as_str(), connection_table.as_str());
+            
             accumulator -= target_time_frame;
+
         }
 
-        /* DRAW */
-
-        // Clear screen
         clear_background(BLACK);
-
-        // draw player
-        draw_player_character(&player, &player, RED);
-
-        // draw enemy
-        draw_enemy_character(&ghoul, &player, WHITE);
-
-        // draw projectiles
-        let result = ENVIRONMENT_INSTANCE.lock();
-        match result {
-            Ok(env_inst) => 
-                for proj in env_inst.player_projectiles.iter() {
-                    draw_player_projectile(proj, &player, BLUE);
-                }
-            Err(poisoned) => panic!("Mutex is poisoned: {:?}", poisoned),
-        }
-
-        // Basic Play UI and Debug Information.
-        draw_gui(&player);
-
         next_frame().await
     }
+    
 }
 
 
+/// pocedure to send client information to server
+fn send_net_message(socket: &UdpSocket, data: &str, destination_addr: &str) {
+    // serialize and encode
+    let serialized_data = serialize(&data).expect("failed to serialize.");
+    // send out
+    let result = socket.send_to(&serialized_data, destination_addr);
+    match result {
+        Ok(_) => (),
+        Err(_) => (),
+    }
+}
 
+/// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
+fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
+    // buffer with the max size of how many bytes to read in from a datagram.
+    let mut buf = [0; 1476];
+    // receive
+    let result: io::Result<(usize, SocketAddr)> = socket.recv_from(&mut buf);
+    match result {
+        Ok((_, src)) => Some((buf, src)),
+        Err(_) => None,
+    }
+}
+
+fn proccess_net_message(ser_msg: [u8; 1476]) -> String {
+    let result = deserialize::<&str>(&ser_msg);
+    return match result {
+        Ok(data) => data.to_string(),
+        Err(_) => panic!("FAILED TO DESERIALIZE"),
+    }; 
+}
 
 
 /// Gives the current time in ms

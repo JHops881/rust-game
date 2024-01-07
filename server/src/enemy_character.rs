@@ -25,8 +25,6 @@ pub struct EnemyCharacter {
 }
 
 impl EnemyCharacter {
-
-
     /// This will Construct and return an EnemyCharacter with corresponding stats
     /// based on what type you make it. For now, this is also where those stats are
     /// decided, meaning balance changes to enemy types can be tweaked here.
@@ -78,7 +76,7 @@ impl EnemyCharacter {
     /// needs a unit vector as a direction to move in.
     pub fn translate(&mut self, unit_vector: Vec2, mut delta_time: f32) {
         
-        delta_time /= 1000.0; // this is importatnt because `delta_time` comes in in milliseconds
+        delta_time /= 1000.0; // this is important because `delta_time` comes in in milliseconds
 
         self.position.x = self.position.x + unit_vector.x * self.speed * delta_time;
         self.position.y = self.position.y + unit_vector.y * self.speed * delta_time;

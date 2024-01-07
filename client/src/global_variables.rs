@@ -8,11 +8,8 @@ use crate::main_character_singleton::MainCharacterSingleton;
 
 
 
-/* GLOBAL CONSTATNS */
+/* GLOBAL CONSTANTS */
 pub const TILE_WIDTH: f32 = 16.0; // pixels
-
-const LOOPBACK_IPV4:    &str = "127.0.0.1";
-const APPLICATION_PORT: &str = "42110";
 
 pub const ZERO_FLOAT: f32 = 0.0;
 

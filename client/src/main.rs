@@ -1,4 +1,13 @@
-use std::time::{UNIX_EPOCH, SystemTime};
+pub mod global_variables;
+pub mod graphics_math;
+pub mod graphics_procedure;
+pub mod graphics_entity;
+pub mod main_character_singleton;
+pub mod server_update_object;
+
+////////////////////////////////// IMPORTS ////////////////////////////////////
+
+use std::{time::{UNIX_EPOCH, SystemTime}, net::SocketAddr, io};
 
 use global_variables::{MAIN_CHARACTER_INSTANCE, ZERO_FLOAT};
 use graphics_entity::{GraphicsEntity, GameEntity};
@@ -7,21 +16,14 @@ use macroquad:: {miniquad::{window::set_fullscreen, KeyCode},
         clear_background,
         next_frame
     }, 
-    color::BLACK, math::Vec2, input::is_key_down, prelude::rand
+    color::BLACK, math::Vec2, input::{is_key_down, is_key_pressed},
 };
 use server_update_object::ServerUpdateObject;
+use std::net::UdpSocket;
+use bincode::{serialize, deserialize};
 
 
-pub mod global_variables;
-pub mod graphics_math;
-pub mod graphics_procedure;
-pub mod graphics_entity;
-pub mod Graphics_Entity;
-pub mod main_character_singleton;
-pub mod server_update_object;
-pub mod client_info_object;
-
-
+//////////////////////////////////// CODE /////////////////////////////////////
 
 
 
@@ -41,106 +43,179 @@ tick to lineraly interpolate the clients visuals.
 */
 
 
-#[macroquad::main("BasicShapes")]
 
-async fn main() {
+#[macroquad::main("Game Client")]   
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
+    /* ============ NETWORK ============ */
 
-    let mut connection_ipv4: String = String::new();
-    let mut session_id:      String = String::new();
+    // let mut connection_ipv4: String = String::new();
+    // let mut session_id:      String = String::new();
+
+    let server_addr: &str = "127.0.0.1:42110";
+
+    // bind to any available local port
+    let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
+    dbg!(&socket);
+    socket.set_nonblocking(true).expect("failed to make socket non-blocking");
+
+    let join_message: &str = "<JOIN>";
+    send_net_message(&socket, join_message, server_addr);
+
+    // To enable linear interpolation, the client must always be one update behind the server.
+    // It stores it in next_server_update and uses the position values to interpolate the
+    // the positions of the graphics entities on the client's side. 
+    let mut this_server_update: ServerUpdateObject;
+    let mut next_server_update: ServerUpdateObject;
+    // must initialize. Ignore. 
+    this_server_update = ServerUpdateObject {
+        x: ZERO_FLOAT,
+        y: ZERO_FLOAT,
+    };
+    next_server_update = ServerUpdateObject {
+        x: ZERO_FLOAT,
+        y: ZERO_FLOAT,
+    };
+
+    /* ======== WINDOW SETTINGS ======== */
 
     set_fullscreen(true);
 
-    //let main_player: GraphicsEntity = GraphicsEntity {world_pos: MAIN_CHARACTER_INSTANCE.get_position_vec2(), entity_type: GameEntity::PlayerCharacter};
+    /* ============ GRAPHICS =========== */
 
-    let mut ghoul: GraphicsEntity = GraphicsEntity { 
-        this_world_pos: Vec2 {
-            x: ZERO_FLOAT,
-            y: ZERO_FLOAT,
-        },
-        next_world_pos: Vec2 {
-            x: ZERO_FLOAT,
-            y: ZERO_FLOAT,
-        },
-        entity_type: GameEntity::Ghoul
-    };
+    
+    let mut graphics_entities: Vec<GraphicsEntity> = Vec::new();
+    graphics_entities.push(
+        GraphicsEntity { 
+            this_world_pos: Vec2 {
+                x: ZERO_FLOAT,
+                y: ZERO_FLOAT,
+            },
+            next_world_pos: Vec2 {
+                x: ZERO_FLOAT,
+                y: ZERO_FLOAT,
+            },
+            entity_type: GameEntity::Ghoul,
+        }
+    );
 
-    let mut this_server_update: ServerUpdateObject;
-    let mut next_server_update: ServerUpdateObject;
 
-    next_server_update = simulate_server_update();
+    /* =========== GAME LOOP =========== */
 
+    // game loop variable instantiations etc. 
     let mut real_delta_time: f64;
     let mut last_update_time: f64 = system_time();
-    let target_time_frame: f64 = /* 15.625; // 64 tick */ 1000.0; // 1 tick
+    let target_time_frame: f64 = 15.625; // 64 tick
     let mut accumulator: f64 = 0.0;
 
     // While game is running...
     loop {
 
+        // game loop value calculations. 
         real_delta_time = system_time() - last_update_time;
         last_update_time += real_delta_time;
         accumulator += real_delta_time;
 
-        // grab local input (macroquad will do this)
-
-        // push local input to server
-
+        // register client input (macroquad will do this)
+        // imaginiary_procedure();
         
+        // Fixed update loop. Refer to `target_time_frame` above for updates per second. 
         while accumulator > target_time_frame {
 
             /* UPDATE */
 
-            // recieve server state
-            this_server_update = next_server_update;
-            next_server_update = simulate_server_update();
+            // ######### SEND CLIENT INFO TO SERVER ######### //
 
-            ghoul = GraphicsEntity { 
-                this_world_pos: this_server_update.ghoul_position,
-                next_world_pos: next_server_update.ghoul_position,
-                entity_type: GameEntity::Ghoul
-            };
+            
+            if is_key_down(KeyCode::G) {
+                let data: &str = "<ACT: U>";
+                send_net_message(&socket, data, server_addr);
+                
+            }
             
 
-            // Allow exiting
-            if is_key_down(KeyCode::Escape) {
-                std::process::exit(0);
+            // ######### RECEIVE SERVER UPDATE TO CLIENT ######### //
+
+            let msg_buf: Option<[u8; 1476]> = recieve_net_message(&socket);
+            match msg_buf {
+                Some(msg) => {
+                    // cache incoming update in `next_server_update` and take the past cached
+                    // update and make it the current. We do this to enable linear interpolation.
+                    this_server_update = next_server_update;
+                    next_server_update = ServerUpdateObject {
+                        x: ZERO_FLOAT,
+                        y: proccess_net_message(msg).parse::<f32>().expect("failed to parse into f32"),
+                    }
+                },
+                None => (),
             }
+            
+            // ######### UPDATE CLIENT ACCOARDING TO STATE ######### //
+
+            graphics_entities[0].this_world_pos = Vec2{ x: this_server_update.x, y: this_server_update.y };
+            graphics_entities[0].next_world_pos = Vec2{ x: next_server_update.x, y: next_server_update.y };
+    
 
             accumulator -= target_time_frame;
         }
 
-        /* DRAW */
+
+
+
+        /* RENDER CALLS */
+
+        // Linear interpolation factor. It is the percentage of time passed
+        // between two updates being the current update and the next update. 
+        // we know if definitively because the updates come in at a fixed rate. 
+        let t: f64 = accumulator / target_time_frame;
 
         // Clear screen
         clear_background(BLACK);
 
-        ghoul.draw(accumulator / target_time_frame);
-      
-
-
-        // Basic Play UI and Debug Information
+        for g_e in graphics_entities.iter() {
+            g_e.draw(t);
+        }
 
         next_frame().await
     }
 }
 
+
+
+
+
+
 /// pocedure to send client information to server
-fn send_client_info() {
-
-}
-
-
-fn simulate_server_update() -> ServerUpdateObject {
-    ServerUpdateObject {
-        ghoul_position: Vec2 {
-            x: rand::gen_range(-20.0, 20.0),
-            y: rand::gen_range(-20.0, 20.0),
-        }
+fn send_net_message(socket: &UdpSocket, data: &str, destination_addr: &str) {
+    // serialize and encode
+    let serialized_data = serialize(&data).expect("failed to serialize.");
+    // send out
+    let result = socket.send_to(&serialized_data, destination_addr);
+    match result {
+        Ok(_) => (),
+        Err(_) => (),
     }
 }
 
+/// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
+fn recieve_net_message(socket: &UdpSocket) -> Option<[u8; 1476]> {
+    // buffer with the max size of how many bytes to read in from a datagram.
+    let mut buf = [0; 1476];
+    // receive
+    let result: io::Result<(usize, SocketAddr)> = socket.recv_from(&mut buf);
+    match result {
+        Ok(_) => Some(buf),
+        Err(_) => None,
+    }
+}
 
+fn proccess_net_message(ser_msg: [u8; 1476]) -> String {
+    let result = deserialize::<&str>(&ser_msg);
+    return match result {
+        Ok(data) => data.to_string(),
+        Err(_) => panic!("FAILED TO DESERIALIZE"),
+    }; 
+}
 
 
 /// Gives the current time in ms

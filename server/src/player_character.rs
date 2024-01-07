@@ -17,7 +17,7 @@ use macroquad:: {
 };
 
 use crate:: {
-    global_variables::{TILE_WIDTH, ENVIRONMENT_INSTANCE},
+    global_variables::ENVIRONMENT_INSTANCE,
     player_projectile::PlayerProjectile,
 };
 
@@ -104,23 +104,23 @@ impl PlayerCharacter {
             self.end_sprint();
         }
 
-        // attacking
-        if is_mouse_button_pressed(MouseButton::Left) {
-
-            // vector containing mouse position on screen in pixels
-            let (x, y) = mouse_position();
-
-            // where the click was but now in the world coordinates
-            let clicked_pos: Vec2 = convert_to_world_coords(Vec2{x,y}, &self, TILE_WIDTH);
-
-            // where the click happened, but now relative to the player (world coords)
-            let vec_from_player: Vec2 = clicked_pos - self.get_position();
-
-            // divided by magnitude to get unit vector
-            let d: Vec2 = vec_from_player / vec_from_player.x.hypot(vec_from_player.y);
-
-            self.cast_spell(Spell::Basic, d);
-        }
+        //// attacking
+        //if is_mouse_button_pressed(MouseButton::Left) {
+ 
+        //    // vector containing mouse position on screen in pixels
+        //    let (x, y) = mouse_position();
+ 
+        //    // where the click was but now in the world coordinates
+        //    let clicked_pos: Vec2 = convert_to_world_coords(Vec2{x,y}, &self, TILE_WIDTH);
+ 
+        //    // where the click happened, but now relative to the player (world coords)
+        //    let vec_from_player: Vec2 = clicked_pos - self.get_position();
+ 
+        //    // divided by magnitude to get unit vector
+        //    let d: Vec2 = vec_from_player / vec_from_player.x.hypot(vec_from_player.y);
+ 
+        //    self.cast_spell(Spell::Basic, d);
+        //}
     }
 
     /// Default Constructor | Get a fresh player character.
