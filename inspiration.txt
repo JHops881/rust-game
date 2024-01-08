@@ -1,0 +1,51 @@
+Pysical World Design:
+    - The world is an infinite disk. A player can explore out in any direction farther and farther from the spawn point. It is open with no
+      invisible walls.VAST, many places to go! can be alone, so vast you can be alone. The are TONS of biomes and places to go to and 
+      people to talk to. The player has their stash in the center of the world where they are free to store their loot, money, items, etc.
+      As the environment is permadeath, the player can, optionally, instantly warp back home to safety at any time. The catch is that a 
+      cost will be automatically charged to the player as they are transported back home. the cost MUST be paid. At first it is just gold,
+      for very cheap, and if a player cannot pay, it will just take as much as the player has without a fuss. As the player journeys much
+      farther out into the world, however, the price will begin to cost Healthpoints, although slow at first, it is the aim to exponentially
+      increas the cost until it is an outrageous amount that the player is unable to pay without dying in transport (this will be possible),
+      this will force the player to win or die in these areas. Some very difficult enemies may drop safe warp tokens RARELY to grant safe warp.
+      some regions may have uique affects like disabling the minimap or applying debuffs
+Character Mode:
+    - permadeath with stashing of look between characters
+Storage:
+    - infinite inventory, and wallet, although will lose on death, should store in stash at center of world
+Player Communication:
+    - VOIP
+    - Game Chat
+    
+    bosses have large healthbars and distinct phases and interactions, must meet prerequisites to summon, drop significant, reqarding loot
+    can customize character with accessories and dyes, choosing what is visable
+    can choose playstyle from select classes
+    unpredictable weapons with Bizzare graphics and interactions
+    unique landmarks unlock new player activities and resources
+    Wide selection of playstile and weaponry
+    distinct factions: familiarity with factions and how to beat them, sense of belonging to game world
+    bullet jumping, rolling, gliding, 
+    loots of things to slash through
+    no set storyline
+    convert resources into higher complexity items to use
+    unintended game behavior results in unique strategies that define the game
+    uninvolved gui, no bloating
+    unique art by miltonpool
+    unique story, game is not lost among the others,
+    tons of weapons and Classes, freedom to choose whatever
+    choose good, choose evil, choose who to helpp, determines oppurtunity
+    Combos and pvp, skill expression, competitiveness
+    skill tree, identity, unique combat effects
+    gear progression system, randomness and non linear
+    have to survive in an economy, make money somehow
+    skill expression, aiming matters
+    pew pew pew, projectile based
+    8 stats
+    significant repeatable content, bosses, dungeons
+    4 items  
+    sense of self identity, character customization
+    modding, equipment customization
+    sense of identity
+    full feeling of control
+    traders
+    black market

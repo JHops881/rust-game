@@ -1,26 +1,29 @@
 pub mod global_variables;
 pub mod graphics_math;
 pub mod graphics_procedure;
-pub mod graphics_entity;
+pub mod entity_graphic;
 pub mod main_character_singleton;
 pub mod server_update_object;
+pub mod entity_type;
 
 ////////////////////////////////// IMPORTS ////////////////////////////////////
 
 use std::{time::{UNIX_EPOCH, SystemTime}, net::SocketAddr, io};
 
 use global_variables::{MAIN_CHARACTER_INSTANCE, ZERO_FLOAT};
-use graphics_entity::{GraphicsEntity, GameEntity};
+use entity_graphic::EntityGraphic;
 use macroquad:: {miniquad::{window::set_fullscreen, KeyCode},
     window:: {
         clear_background,
         next_frame
     }, 
-    color::BLACK, math::Vec2, input::{is_key_down, is_key_pressed},
+    color::BLACK, math::Vec2, input::is_key_down,
 };
 use server_update_object::ServerUpdateObject;
 use std::net::UdpSocket;
 use bincode::{serialize, deserialize};
+
+use crate::entity_type::EntityType;
 
 
 //////////////////////////////////// CODE /////////////////////////////////////
@@ -65,17 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // To enable linear interpolation, the client must always be one update behind the server.
     // It stores it in next_server_update and uses the position values to interpolate the
     // the positions of the graphics entities on the client's side. 
-    let mut this_server_update: ServerUpdateObject;
-    let mut next_server_update: ServerUpdateObject;
-    // must initialize. Ignore. 
-    this_server_update = ServerUpdateObject {
-        x: ZERO_FLOAT,
-        y: ZERO_FLOAT,
-    };
-    next_server_update = ServerUpdateObject {
-        x: ZERO_FLOAT,
-        y: ZERO_FLOAT,
-    };
+    
 
     /* ======== WINDOW SETTINGS ======== */
 
@@ -84,20 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     /* ============ GRAPHICS =========== */
 
     
-    let mut graphics_entities: Vec<GraphicsEntity> = Vec::new();
-    graphics_entities.push(
-        GraphicsEntity { 
-            this_world_pos: Vec2 {
-                x: ZERO_FLOAT,
-                y: ZERO_FLOAT,
-            },
-            next_world_pos: Vec2 {
-                x: ZERO_FLOAT,
-                y: ZERO_FLOAT,
-            },
-            entity_type: GameEntity::Ghoul,
-        }
-    );
+    let mut graphics_entities: Vec<EntityGraphic> = Vec::new();
 
 
     /* =========== GAME LOOP =========== */
@@ -135,26 +115,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             
 
             // ######### RECEIVE SERVER UPDATE TO CLIENT ######### //
-
-            let msg_buf: Option<[u8; 1476]> = recieve_net_message(&socket);
-            match msg_buf {
-                Some(msg) => {
-                    // cache incoming update in `next_server_update` and take the past cached
-                    // update and make it the current. We do this to enable linear interpolation.
-                    this_server_update = next_server_update;
-                    next_server_update = ServerUpdateObject {
-                        x: ZERO_FLOAT,
-                        y: proccess_net_message(msg).parse::<f32>().expect("failed to parse into f32"),
-                    }
+            let mut msg_buf: [u8; 1476] = [0; 1476];
+            let mut new_update: bool = false;
+            let msg_buf_option: Option<[u8; 1476]> = recieve_net_data(&socket);
+            match msg_buf_option {
+                Some(data) => {
+                    msg_buf = data;
+                    new_update = true;
                 },
                 None => (),
             }
             
             // ######### UPDATE CLIENT ACCOARDING TO STATE ######### //
 
-            graphics_entities[0].this_world_pos = Vec2{ x: this_server_update.x, y: this_server_update.y };
-            graphics_entities[0].next_world_pos = Vec2{ x: next_server_update.x, y: next_server_update.y };
-    
+            if new_update {
+                proccess_net_data(msg_buf,);
+            }
 
             accumulator -= target_time_frame;
         }
@@ -198,7 +174,7 @@ fn send_net_message(socket: &UdpSocket, data: &str, destination_addr: &str) {
 }
 
 /// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
-fn recieve_net_message(socket: &UdpSocket) -> Option<[u8; 1476]> {
+fn recieve_net_data(socket: &UdpSocket) -> Option<[u8; 1476]> {
     // buffer with the max size of how many bytes to read in from a datagram.
     let mut buf = [0; 1476];
     // receive
@@ -209,12 +185,10 @@ fn recieve_net_message(socket: &UdpSocket) -> Option<[u8; 1476]> {
     }
 }
 
-fn proccess_net_message(ser_msg: [u8; 1476]) -> String {
-    let result = deserialize::<&str>(&ser_msg);
-    return match result {
-        Ok(data) => data.to_string(),
-        Err(_) => panic!("FAILED TO DESERIALIZE"),
-    }; 
+fn proccess_net_data(ser_msg: [u8; 1476], graphics: Vec<EntityGraphic>) {
+    let first_byte: &[u8; 1] = &[ser_msg[0]; 1];
+    let packet_code = deserialize::<&str>(first_byte).expect("failed to deserialize!");
+    match packet_code
 }
 
 

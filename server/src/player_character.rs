@@ -7,13 +7,8 @@ use macroquad:: {
         is_key_down,
         is_key_pressed,
         is_key_released,
-        is_mouse_button_pressed,
-        mouse_position
     },
-    miniquad:: {
-        KeyCode,
-        MouseButton
-    }
+    miniquad::KeyCode
 };
 
 use crate:: {
@@ -247,28 +242,10 @@ impl PlayerCharacter {
     /// Safely handles an attempt to cast a spell. Returns whether or
     /// not the player character has sufficient mana to cast the spell. 
     pub fn can_cast(& self, spell: &Spell) -> bool {
-        match spell {
-            Spell::Basic => {
-                if self.current_mana >= self.basic_cost {
-                    return true;
-                } else {
-                    return false;      // I don't have to use the getter here .get_mana_cost()
-                }                      // because we already know which cost it is in each case.
-            }                          // Also, that would be slower.
-            Spell::KeneticPulse => {    
-                if self.current_mana >= self.kenetic_pulse_cost {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            Spell::Lightning => {
-                if self.current_mana >= self.lightning_cost {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+        if self.current_mana >= self.get_mana_cost(spell) {
+            return true;
+        } else {
+            return false;
         }
     }
 

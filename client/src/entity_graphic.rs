@@ -2,46 +2,32 @@ use macroquad::color::{WHITE, GRAY, BLUE, GREEN, PURPLE, RED, YELLOW, PINK, BROW
 use macroquad::math::Vec2;
 use macroquad::shapes::draw_circle;
 
+use crate::entity_type::EntityType;
 use crate::graphics_math::convert_to_screen_coords;
 
 
 
 
 
-/// This represents each unique tangible animate or inanimate body that exists in the game. 
-pub enum  GameEntity {
-
-    PlayerCharacter,
-
-    BasicAttack,
-    KeneticPulse,
-    Lightning,
-
-    ArmsDealer,
-
-    // Enemy Character Typesx
-    Ghoul,
-    Phantom,
-    Drinker,
-    Crawler,
-
-    // Dropped Item Types
-    Coin,
-    LootBag,
-    
-}
 
 /// This represents anything in the playbale game that exists in the game world and is drawn
-pub struct GraphicsEntity { 
+pub struct EntityGraphic {
 
+    pub entity_type: EntityType,
+    pub id:          i32,
+
+    /// the world postion of the graphic in this update
     pub this_world_pos: Vec2,
+    
+    /// the world position of the graphic in the next update
     pub next_world_pos: Vec2,
-    pub entity_type: GameEntity
+
+    
 
 }
 
 
-impl GraphicsEntity {
+impl EntityGraphic {
 
     /* THIS UPDATE */
 
@@ -85,17 +71,17 @@ impl GraphicsEntity {
     pub fn draw(&self, t: f64) {
 
         let color: Color = match self.entity_type {
-            GameEntity::PlayerCharacter => WHITE,
-            GameEntity::BasicAttack     => GRAY,
-            GameEntity::KeneticPulse    => BLUE,
-            GameEntity::Lightning       => PURPLE,
-            GameEntity::ArmsDealer      => WHITE,
-            GameEntity::Ghoul           => GREEN,
-            GameEntity::Phantom         => RED,
-            GameEntity::Drinker         => MAGENTA,
-            GameEntity::Crawler         => BROWN,
-            GameEntity::Coin            => YELLOW,
-            GameEntity::LootBag         => PINK,
+            EntityType::PlayerCharacter => WHITE,
+            EntityType::BasicAttack     => GRAY,
+            EntityType::KeneticPulse    => BLUE,
+            EntityType::Lightning       => PURPLE,
+            EntityType::ArmsDealer      => WHITE,
+            EntityType::Ghoul           => GREEN,
+            EntityType::Phantom         => RED,
+            EntityType::Drinker         => MAGENTA,
+            EntityType::Crawler         => BROWN,
+            EntityType::Coin            => YELLOW,
+            EntityType::LootBag         => PINK,
         };
 
         // linear interpolation. 

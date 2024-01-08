@@ -4,7 +4,7 @@ pub mod player_projectile;
 
 pub mod enemy_character;
 
-pub mod game_entity_factory;
+pub mod entity_factory;
 
 pub mod environment_singleton;
 
@@ -24,7 +24,7 @@ use enemy_character:: {
     EnemyType
 };
 
-use game_entity_factory::GameEntityFactory;
+use entity_factory::EntityFactory;
 use global_variables::ENVIRONMENT_INSTANCE;
 
 use macroquad::{math::Vec2, window::{clear_background, next_frame}, color::BLACK};
@@ -42,7 +42,7 @@ async fn main() {
     socket.set_nonblocking(true).expect("failed to make socket non-blocking");
 
     // initalize an enemy
-    GameEntityFactory::create_ghoul(Vec2 {x: 0.0, y: 0.0});
+    EntityFactory::create_ghoul(Vec2 {x: 0.0, y: 0.0});
 
     // gme loop crap
     // https://fulmanski.pl/zajecia/tippgk/zajecia_20162017/wyklad_cwiczenia_moje/game_loop_and_time.pdf
