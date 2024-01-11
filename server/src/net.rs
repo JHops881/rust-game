@@ -15,7 +15,7 @@ use crate::{entity_factory::EntityFactory, game_world::GameWorld};
 
 pub fn send_game_state_to_connected_players(
     socket: &UdpSocket,
-    connection_table: &HashMap<Uuid, String>,
+    connection_table: &HashMap<String, Uuid>,
     game_world: &GameWorld,
 ) {
     let mut entity_data: Vec<Entity> = Vec::new();
@@ -58,7 +58,7 @@ pub fn send_game_state_to_connected_players(
     let serialized_message: Vec<u8> = serialize(&message).expect("failed to serialize.");
 
     // send out to every connection on the server
-    for (id, address) in connection_table {
+    for (address, id) in connection_table {
         let _ = socket.send_to(&serialized_message, address);
         // we also need to send the correct player data to each connection for
         // each client's main character.
@@ -116,7 +116,7 @@ pub fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr
 pub fn proccess_net_message(
     ser_msg: [u8; 1476],
     sender: SocketAddr,
-    connection_table: &mut HashMap<Uuid, String>,
+    connection_table: &mut HashMap<String, Uuid>,
     game_world: &mut GameWorld,
 ) {
     let message = deserialize::<ClientToServerMessage>(&ser_msg).expect("Failed to deserialize!");
@@ -126,12 +126,12 @@ pub fn proccess_net_message(
             Connection::Join => {
                 let id: Uuid = Uuid::new_v4();
                 EntityFactory::create_new_player_character(String::from("Joseph"), id, game_world);
-                connection_table.insert(id, sender.to_string());
-
-                println!("{}, {}", id, sender.to_string()) // debug
+                connection_table.insert(sender.to_string(), id);
             }
             Connection::KeepAlive => (),
-            Connection::Drop => (),
+            Connection::Drop => {
+                connection_table.remove(&sender.to_string());
+            },
         },
     }
 }

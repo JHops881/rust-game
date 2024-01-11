@@ -73,6 +73,10 @@ impl ClientToServerMessage {
     pub fn package_connection_join() -> Self {
         Self::ConnectionEvent { event: Connection::Join }
     }
+
+    pub fn package_connection_drop() -> Self {
+        Self::ConnectionEvent { event: Connection::Drop }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

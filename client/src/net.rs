@@ -1,10 +1,13 @@
 use std::{
+    collections::HashMap,
     io,
     net::{SocketAddr, UdpSocket},
 };
 
 use bincode::{deserialize, serialize};
+use macroquad::math::Vec2;
 use netlib::{ClientToServerMessage, ServerToClientMessage};
+use uuid::Uuid;
 
 use crate::entity_graphic::EntityGraphic;
 
@@ -28,11 +31,52 @@ pub fn recieve_net_data(socket: &UdpSocket) -> Option<[u8; 1476]> {
     }
 }
 
-pub fn proccess_net_data(ser_msg: [u8; 1476], graphics: &mut Vec<EntityGraphic>) {
+pub fn proccess_net_data(ser_msg: &[u8; 1476], graphics: &mut HashMap<Uuid, EntityGraphic>) {
     let message: ServerToClientMessage =
-        deserialize::<ServerToClientMessage>(&ser_msg).expect("Failed to deserialize!");
+        deserialize::<ServerToClientMessage>(ser_msg).expect("Failed to deserialize!");
     match message {
-        ServerToClientMessage::EntityData { data } => (),
+        ServerToClientMessage::EntityData { data } => {
+            for entity in data.iter() {
+                let is_cached: bool = graphics.contains_key(&entity.id);
+                match is_cached {
+                    true => {
+                        let old_state = graphics
+                            .get(&entity.id)
+                            .expect("Somehow, a graphic is missing a value!");
+                        let _ = graphics.insert(
+                            entity.id,
+                            EntityGraphic::new(
+                                Vec2 {
+                                    x: old_state.get_next_x(),
+                                    y: old_state.get_next_y(),
+                                },
+                                Vec2 {
+                                    x: entity.x,
+                                    y: entity.y,
+                                },
+                                old_state.get_entity_type(),
+                            ),
+                        );
+                    }
+                    false => {
+                        let _ = graphics.insert(
+                            entity.id,
+                            EntityGraphic::new(
+                                Vec2 {
+                                    x: entity.x,
+                                    y: entity.y,
+                                },
+                                Vec2 {
+                                    x: entity.x,
+                                    y: entity.y,
+                                },
+                                entity.entity_type,
+                            ),
+                        );
+                    }
+                }
+            }
+        }
         ServerToClientMessage::PlayerData { data } => (),
     }
 }

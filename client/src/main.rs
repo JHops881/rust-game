@@ -6,22 +6,23 @@ pub mod net;
 
 ////////////////////////////////// IMPORTS ////////////////////////////////////
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{time::{SystemTime, UNIX_EPOCH}, collections::HashMap};
 
 use constants::ZERO_FLOAT;
 use macroquad::{
     color::BLACK,
-    input::is_key_down,
+    input::{is_key_down, is_key_pressed},
     math::Vec2,
     miniquad::{window::set_fullscreen, KeyCode},
     window::{clear_background, next_frame},
 };
 use netlib::{system_time, ClientToServerMessage};
+use uuid::Uuid;
 use std::net::UdpSocket;
 
 use crate::{
     entity_graphic::EntityGraphic,
-    net::{recieve_net_data, send_net_message},
+    net::{recieve_net_data, send_net_message, proccess_net_data},
 };
 
 //////////////////////////////////// CODE /////////////////////////////////////
@@ -101,11 +102,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     /* ======== WINDOW SETTINGS ======== */
 
-    set_fullscreen(true);
+    // set_fullscreen(true);
 
     /* ============ GRAPHICS =========== */
 
-    let mut graphics_entities: Vec<EntityGraphic> = Vec::new();
+    let mut graphics_entities: HashMap<Uuid ,EntityGraphic> = HashMap::new();
 
     /* =========== GAME LOOP =========== */
 
@@ -131,25 +132,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // ######### SEND CLIENT INFO TO SERVER ######### //
 
-
+            if is_key_pressed(KeyCode::Escape) {
+                let message = ClientToServerMessage::package_connection_drop();
+                send_net_message(&socket, &message, server_addr);
+                std::process::exit(0);
+            }
             
             // ######### RECEIVE SERVER UPDATE TO CLIENT ######### //
-            let mut _msg_buf: [u8; 1476] = [0; 1476];
-            let mut _new_update: bool = false;
+            let mut new_messages: Vec<[u8; 1476]> = Vec::new();
+
             let msg_buf_option: Option<[u8; 1476]> = recieve_net_data(&socket);
             match msg_buf_option {
                 Some(data) => {
-                    _msg_buf = data;
-                    _new_update = true;
+                    new_messages.push(data);
                 }
                 None => (),
             }
 
             // ######### UPDATE CLIENT ACCOARDING TO STATE ######### //
 
-            //if new_update {
-            //    proccess_net_data(msg_buf);
-            //}
+            for msg in new_messages.iter() {
+                proccess_net_data(msg, &mut graphics_entities)
+            }
 
             accumulator -= target_time_frame;
         }
@@ -164,7 +168,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Clear screen
         clear_background(BLACK);
 
-        for g_e in graphics_entities.iter() {
+        for (_, g_e) in graphics_entities.iter() {
             g_e.draw(t, &client_camera_position);
         }
 

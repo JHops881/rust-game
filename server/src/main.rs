@@ -30,9 +30,9 @@ use entity_factory::EntityFactory;
 use game_world::GameWorld;
 
 use macroquad::{
-    color::BLACK,
+    color::{BLACK, BLUE, WHITE},
     math::Vec2,
-    window::{clear_background, next_frame},
+    window::{clear_background, next_frame}, text::draw_text,
 };
 use net::{send_game_state_to_connected_players, recieve_net_message, proccess_net_message};
 use netlib::system_time;
@@ -44,7 +44,7 @@ use uuid::Uuid;
 async fn main() {
     let mut game_world: GameWorld = GameWorld::new();
 
-    let mut connection_table: HashMap<Uuid, String> = HashMap::new();
+    let mut connection_table: HashMap<String, Uuid> = HashMap::new();
 
     // bind to any available local port
     let socket = UdpSocket::bind("127.0.0.1:42110").expect("couldn't bind to address");
@@ -90,6 +90,22 @@ async fn main() {
         }
 
         clear_background(BLACK);
+
+        // display connections
+        let font_size: f32 = 30.0;
+        let newline_offset: f32 = 30.0;
+        let x_pos: f32 = 12.0;
+        let y_pos: f32 = 25.0;
+
+        draw_text("CURRENT CONNECTIONS:", x_pos, y_pos, font_size, BLUE);
+        
+        let mut connection_number: i32 = 1;
+        for (address, id) in connection_table.iter() {
+            let connection_y_pos: f32 = y_pos + connection_number as f32 * newline_offset;
+            draw_text((id.to_string() + ", " + address.as_str()).as_str(), x_pos, connection_y_pos, font_size, WHITE);
+            connection_number += 1;
+        }
+
         next_frame().await
     }
 }

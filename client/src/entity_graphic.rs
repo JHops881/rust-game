@@ -4,13 +4,12 @@ use macroquad::color::{
 use macroquad::math::Vec2;
 use macroquad::shapes::draw_circle;
 use netlib::EntityType;
-use uuid::Uuid;
 
 use crate::graphics_math::convert_to_screen_coords;
 
 /// This represents anything in the playbale game that exists in the game world and is drawn
+/// Does not have and ID because it is intended to be put in a hashmap.
 pub struct EntityGraphic {
-    id: Uuid,
     /// the world postion of the graphic in this update
     this_world_pos: Vec2,
     /// the world position of the graphic in the next update
@@ -20,21 +19,15 @@ pub struct EntityGraphic {
 
 impl EntityGraphic {
     pub fn new(
-        id: Uuid,
         this_world_pos: Vec2,
         next_world_pos: Vec2,
         entity_type: EntityType,
     ) -> Self {
         EntityGraphic {
-            id,
             this_world_pos,
             next_world_pos,
             entity_type,
         }
-    }
-
-    pub fn get_id(&self) -> Uuid {
-        self.id
     }
 
     /* THIS UPDATE */
