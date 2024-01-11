@@ -7,4 +7,6 @@ bin/*
 
 /server/target
 
+/netlib/target
+
 /.vscode

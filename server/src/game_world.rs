@@ -1,13 +1,7 @@
-use crate:: {
+use crate::{
+    enemy_character::EnemyCharacter, player_character::PlayerCharacter,
     player_projectile::PlayerProjectile,
-    player_character::PlayerCharacter,
-    enemy_character::EnemyCharacter,
-    global_variables::IS_ENVIRONNMENT_MADE
 };
-
-
-
-
 
 /// An Environment is just a data structure that stores our things in the world.
 /// For something to "Exist" It needs to be stored in the Environment instance. The
@@ -16,39 +10,22 @@ use crate:: {
 /// eachother -because they exist in the same environment!
 ///
 /// Pretty cool Right!? Be nice to you environment.
-pub struct EnvironmentSingleton {
-
-    pub player_characters:  Vec<PlayerCharacter>,
+pub struct GameWorld {
+    pub player_characters: Vec<PlayerCharacter>,
     pub player_projectiles: Vec<PlayerProjectile>,
-    pub enemy_characters:   Vec<EnemyCharacter>,
+    pub enemy_characters: Vec<EnemyCharacter>,
 }
 
-impl EnvironmentSingleton {
-
-    /// Construct the environmnet. This enforces singleton rules.
-    /// It depends on a global counter `ENVIRONMENT_COUNT`
+impl GameWorld {
     pub fn new() -> Self {
-
-        unsafe {
-            if IS_ENVIRONNMENT_MADE == false {
-
-                IS_ENVIRONNMENT_MADE = true;
-                return EnvironmentSingleton {
-                    player_characters:  Vec::new(),
-                    player_projectiles: Vec::new(),
-                    enemy_characters:   Vec::new(),
-                };
-
-            } else {
-                panic!("Attempted to create a second environment!")
-            }
-        }
+        return GameWorld {
+            player_characters: Vec::new(),
+            player_projectiles: Vec::new(),
+            enemy_characters: Vec::new(),
+        };
     }
 
-
-
-    pub fn fixed_update(&mut self, delta_time: f32, ) {
-        
+    pub fn fixed_update(&mut self, delta_time: f32) {
         // update players
         for player_character in self.player_characters.iter_mut() {
             player_character.update(delta_time);
@@ -58,18 +35,9 @@ impl EnvironmentSingleton {
         for proj in self.player_projectiles.iter_mut() {
             proj.update(delta_time);
         }
-
     }
-
-
 
     pub fn cull_expired_projectiles(&mut self) {
         self.player_projectiles.retain(|proj| !proj.is_expired());
     }
-
-    
 }
-
-
-
-   
