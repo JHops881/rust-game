@@ -23,7 +23,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use bincode::{deserialize, serialize};
 use constants::ZERO_ZERO;
 use enemy_character::{EnemyCharacter, EnemyType};
 
@@ -35,8 +34,8 @@ use macroquad::{
     math::Vec2,
     window::{clear_background, next_frame},
 };
-use net::send_game_state_to_connected_players;
-use serde::{Deserialize, Serialize};
+use net::{send_game_state_to_connected_players, recieve_net_message, proccess_net_message};
+use netlib::system_time;
 use uuid::Uuid;
 
 //////////////////////////////////// CODE /////////////////////////////////////
@@ -74,9 +73,13 @@ async fn main() {
             /* UPDATE */
 
             // Get Net Data
-            //let result = recieve_net_message(&socket);
+            let result = recieve_net_message(&socket);
 
             // process net data
+            match result {
+                Some((ser_msg, sender)) => proccess_net_message(ser_msg, sender, &mut connection_table, &mut game_world),
+                None => (),
+            }
 
             // update new game state
             game_world.fixed_update(target_time_frame as f32);
@@ -89,17 +92,4 @@ async fn main() {
         clear_background(BLACK);
         next_frame().await
     }
-}
-
-/// Gives the current time in ms
-pub fn system_time() -> f64 {
-    // Get the current time
-    let now = SystemTime::now();
-
-    // Calculate the duration since the Unix epoch
-    let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
-
-    return milliseconds;
 }

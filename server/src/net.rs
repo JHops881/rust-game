@@ -5,14 +5,13 @@ use std::{
 };
 
 use bincode::{deserialize, serialize};
-use netlib::{Entity, PlayerData, ServerToClientMessage};
+use netlib::{ClientToServerMessage, Connection, Entity, PlayerData, ServerToClientMessage};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::game_world::GameWorld;
+use crate::{entity_factory::EntityFactory, game_world::GameWorld};
 
 ///////////////////////////////////////////////////////////////////////////////
-
 
 pub fn send_game_state_to_connected_players(
     socket: &UdpSocket,
@@ -102,7 +101,7 @@ pub fn send_game_state_to_connected_players(
 }
 
 /// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
-fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
+pub fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
     // buffer with the max size of how many bytes to read in from a datagram.
     let mut buf = [0; 1476];
     // receive
@@ -114,6 +113,25 @@ fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
 }
 
 /// TODO: DOC COMMENT
-fn proccess_net_message(ser_msg: [u8; 1476]) {
-    let message = deserialize::<&str>(&ser_msg).expect("Failed to deserialize!");
+pub fn proccess_net_message(
+    ser_msg: [u8; 1476],
+    sender: SocketAddr,
+    connection_table: &mut HashMap<Uuid, String>,
+    game_world: &mut GameWorld,
+) {
+    let message = deserialize::<ClientToServerMessage>(&ser_msg).expect("Failed to deserialize!");
+    match message {
+        ClientToServerMessage::ActionEvent { event } => (),
+        ClientToServerMessage::ConnectionEvent { event } => match event {
+            Connection::Join => {
+                let id: Uuid = Uuid::new_v4();
+                EntityFactory::create_new_player_character(String::from("Joseph"), id, game_world);
+                connection_table.insert(id, sender.to_string());
+
+                println!("{}, {}", id, sender.to_string()) // debug
+            }
+            Connection::KeepAlive => (),
+            Connection::Drop => (),
+        },
+    }
 }

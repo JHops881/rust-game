@@ -40,7 +40,7 @@ Entity {
 
 b'#'
 // Entity type heirarchy
-Enenmy:   E, (G | P | D | C)
+Enenmy:   E, (G | P | D | C) 
 Tile:     T
 Proj:     B, (K | L)
 Player:   P, (O | M)

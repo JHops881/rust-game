@@ -16,6 +16,7 @@ use macroquad::{
     miniquad::{window::set_fullscreen, KeyCode},
     window::{clear_background, next_frame},
 };
+use netlib::{system_time, ClientToServerMessage};
 use std::net::UdpSocket;
 
 use crate::{
@@ -90,8 +91,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .set_nonblocking(true)
         .expect("failed to make socket non-blocking");
 
-    let join_message: &str = "<JOIN>";
-    send_net_message(&socket, join_message, server_addr);
+    // Tell server client is joining
+    let message = ClientToServerMessage::package_connection_join();
+    send_net_message(&socket, &message, server_addr);
 
     // To enable linear interpolation, the client must always be one update behind the server.
     // It stores it in next_server_update and uses the position values to interpolate the
@@ -129,11 +131,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // ######### SEND CLIENT INFO TO SERVER ######### //
 
-            if is_key_down(KeyCode::W) {
-                let data: &str = "<ACT: U>";
-                send_net_message(&socket, data, server_addr);
-            }
 
+            
             // ######### RECEIVE SERVER UPDATE TO CLIENT ######### //
             let mut _msg_buf: [u8; 1476] = [0; 1476];
             let mut _new_update: bool = false;
@@ -173,15 +172,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-/// Gives the current time in ms
-pub fn system_time() -> f64 {
-    // Get the current time
-    let now = SystemTime::now();
 
-    // Calculate the duration since the Unix epoch
-    let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
-
-    return milliseconds;
-}

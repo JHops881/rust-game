@@ -1,3 +1,5 @@
+use std::time::{UNIX_EPOCH, SystemTime};
+
 use macroquad::prelude::Vec2;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -33,18 +35,18 @@ pub struct Entity {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-enum Action {
+pub enum Action {
     Move { x: f32, y: f32 },
     Shoot { x: f32, y: f32 },
 }
 #[derive(Debug, Serialize, Deserialize)]
-enum Connection {
+pub enum Connection {
     Join,
     KeepAlive,
     Drop,
 }
 #[derive(Debug, Serialize, Deserialize)]
-enum ClientToServerMessage {
+pub enum ClientToServerMessage {
     ActionEvent { event: Action },
     ConnectionEvent { event: Connection },
 }
@@ -66,6 +68,10 @@ impl ClientToServerMessage {
                 y: direction.y,
             },
         }
+    }
+
+    pub fn package_connection_join() -> Self {
+        Self::ConnectionEvent { event: Connection::Join }
     }
 }
 
@@ -116,4 +122,17 @@ impl ServerToClientMessage {
     pub fn package_entity_data(data: Vec<Entity>) -> Self {
         Self::EntityData { data }
     }
+}
+
+/// Gives the current time in ms
+pub fn system_time() -> f64 {
+    // Get the current time
+    let now = SystemTime::now();
+
+    // Calculate the duration since the Unix epoch
+    let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
+
+    let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
+
+    return milliseconds;
 }

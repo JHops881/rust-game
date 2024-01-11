@@ -75,11 +75,11 @@ impl PlayerCharacter {
     }
 
     /// Default Constructor | Get a fresh player character.
-    pub fn new(name: String) -> PlayerCharacter {
+    pub fn new(name: String, id: Uuid) -> PlayerCharacter {
         let initial_speed: f32 = 2.68;
 
         PlayerCharacter {
-            id: Uuid::new_v4(),
+            id,
             name,
 
             position: Vec2 { x: 0.0, y: 0.0 },

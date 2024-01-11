@@ -3,6 +3,7 @@ use crate::{
     player_projectile::PlayerProjectile, spell::Spell,
 };
 use macroquad::math::Vec2;
+use uuid::Uuid;
 
 /// The `EntityFactory` provides an interface for the developer to initialiaze game entities
 /// into the game's environment. These entities are outlined below. The environment that they are
@@ -46,8 +47,8 @@ impl EntityFactory {
         game_world.enemy_characters.push(ghoul);
     }
 
-    pub fn create_new_player_character(name: String, game_world: &mut GameWorld) {
-        let player = PlayerCharacter::new(name);
+    pub fn create_new_player_character(name: String, id: Uuid, game_world: &mut GameWorld) {
+        let player = PlayerCharacter::new(name, id);
         game_world.player_characters.push(player);
     }
 
