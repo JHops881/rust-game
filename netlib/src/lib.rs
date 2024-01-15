@@ -1,6 +1,6 @@
 use std::time::{UNIX_EPOCH, SystemTime};
 
-use macroquad::prelude::Vec2;
+use macroquad::{prelude::Vec2, math::Vec4Swizzles};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -110,6 +110,37 @@ pub struct PlayerData {
     pub basic_power_multi: f32,
     pub kenetic_pulse_power_multi: f32,
     pub lightning_power_multi: f32,
+}
+
+impl PlayerData {
+    pub fn new_default() -> Self {
+        let zero: f32 = 0.0;
+        PlayerData {
+            x: zero,
+            y: zero,
+            id: Uuid::nil(),
+            name: String::new(),
+            speed_stat: zero,
+            health_stat: zero,
+            mana_stat: zero,
+            power_stat: zero,
+            vitality_stat: zero,
+            wisdom_stat: zero,
+            dexterity_stat: zero,
+            defense_stat: zero,
+            current_speed: zero,
+            current_health: zero,
+            current_mana: zero,
+            is_dead: false,
+            is_sprinting: false,
+            basic_cost: zero,
+            kenetic_pulse_cost: zero,
+            lightning_cost: zero,
+            basic_power_multi: zero,
+            kenetic_pulse_power_multi: zero,
+            lightning_power_multi: zero
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

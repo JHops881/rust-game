@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::entity_graphic::EntityGraphic;
 
 /// pocedure to send client information to server
-pub fn send_net_message(socket: &UdpSocket, data: &ClientToServerMessage, destination_addr: &str) {
+pub fn send_client_message(socket: &UdpSocket, data: &ClientToServerMessage, destination_addr: &str) {
     // serialize and encode
     let serialized_data = serialize(&data).expect("failed to serialize.");
     // send out
@@ -20,7 +20,7 @@ pub fn send_net_message(socket: &UdpSocket, data: &ClientToServerMessage, destin
 }
 
 /// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
-pub fn recieve_net_data(socket: &UdpSocket) -> Option<[u8; 1476]> {
+pub fn seceive_server_message(socket: &UdpSocket) -> Option<[u8; 1476]> {
     // buffer with the max size of how many bytes to read in from a datagram.
     let mut buf = [0; 1476];
     // receive
@@ -31,7 +31,7 @@ pub fn recieve_net_data(socket: &UdpSocket) -> Option<[u8; 1476]> {
     }
 }
 
-pub fn proccess_net_data(ser_msg: &[u8; 1476], graphics: &mut HashMap<Uuid, EntityGraphic>) {
+pub fn proccess_server_message(ser_msg: &[u8; 1476], graphics: &mut HashMap<Uuid, EntityGraphic>) {
     let message: ServerToClientMessage =
         deserialize::<ServerToClientMessage>(ser_msg).expect("Failed to deserialize!");
     match message {

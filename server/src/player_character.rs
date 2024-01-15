@@ -49,11 +49,19 @@ pub struct PlayerCharacter {
     basic_power_multi: f32,         // a value that deterimes how much damage
     kenetic_pulse_power_multi: f32, // it will do. It's a multiplier.
     lightning_power_multi: f32,     // damage = power_stat * value
+
+    movement: Option<Vec2>,  // unit vector of direction
+    shootment: Option<Vec2>, // world coord
 }
 
 impl PlayerCharacter {
     /// call this every fixed_update to update the state of a player instance
     pub fn update(&mut self, delta_time: f32) {
+
+        match self.get_shootment() {
+            Some(direction) => self.translate(direction, delta_time),
+            None => (),
+        }
 
         //// attacking
         //if is_mouse_button_pressed(MouseButton::Left) {
@@ -107,6 +115,9 @@ impl PlayerCharacter {
             basic_power_multi: 1.0,
             kenetic_pulse_power_multi: 2.0,
             lightning_power_multi: 5.0,
+
+            movement: None,
+            shootment: None,
         }
     }
 
@@ -208,6 +219,22 @@ impl PlayerCharacter {
     /// PlayerCharacter mana getter
     pub fn get_mana(&self) -> f32 {
         self.current_mana
+    }
+
+    pub fn get_movement(&self) -> Option<Vec2> {
+        self.movement
+    }
+    
+    pub fn get_shootment(&self) -> Option<Vec2> {
+        self.shootment
+    }
+
+    pub fn set_movement(&mut self, direction__: Option<Vec2>) {
+        self.movement = direction__;
+    }
+
+    pub fn set_shootment(&mut self, location__: Option<Vec2>) {
+        self.shootment = location__;
     }
 
     /// Reutrns the mana cost of a spell for a player.

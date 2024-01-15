@@ -20,6 +20,7 @@ use std::{
     collections::HashMap,
     io,
     net::{SocketAddr, UdpSocket},
+    sync::mpsc::Sender,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -32,9 +33,10 @@ use game_world::GameWorld;
 use macroquad::{
     color::{BLACK, BLUE, WHITE},
     math::Vec2,
-    window::{clear_background, next_frame}, text::draw_text,
+    text::draw_text,
+    window::{clear_background, next_frame},
 };
-use net::{send_game_state_to_connected_players, recieve_net_message, proccess_net_message};
+use net::{proccess_client_message, recieve_client_message, send_game_state_to_connected_players};
 use netlib::system_time;
 use uuid::Uuid;
 
@@ -46,7 +48,6 @@ async fn main() {
 
     let mut connection_table: HashMap<String, Uuid> = HashMap::new();
 
-    // bind to any available local port
     let socket = UdpSocket::bind("127.0.0.1:42110").expect("couldn't bind to address");
     socket
         .set_nonblocking(true)
@@ -72,13 +73,21 @@ async fn main() {
         while accumulator > target_time_frame {
             /* UPDATE */
 
-            // Get Net Data
-            let result = recieve_net_message(&socket);
+            // ######### RECEIVE CLIENTS' DATA ######### //
+            let mut new_serialized_messages: Vec<([u8; 1476], SocketAddr)> = Vec::new();
+            loop {
+                let pair: Option<([u8; 1476], SocketAddr)> = recieve_client_message(&socket);
+                match pair {
+                    Some(data) => {
+                        new_serialized_messages.push(data);
+                    }
+                    None => break,
+                }
+            }
 
             // process net data
-            match result {
-                Some((ser_msg, sender)) => proccess_net_message(ser_msg, sender, &mut connection_table, &mut game_world),
-                None => (),
+            for (ser_msg, sender) in new_serialized_messages.iter() {
+                proccess_client_message(ser_msg, *sender, &mut connection_table, &mut game_world)
             }
 
             // update new game state
@@ -93,16 +102,22 @@ async fn main() {
 
         // display connections
         let font_size: f32 = 30.0;
-        let newline_offset: f32 = 30.0;
+        let newline_offset: f32 = 30.0; // all in pixels
         let x_pos: f32 = 12.0;
         let y_pos: f32 = 25.0;
 
         draw_text("CURRENT CONNECTIONS:", x_pos, y_pos, font_size, BLUE);
-        
+
         let mut connection_number: i32 = 1;
         for (address, id) in connection_table.iter() {
-            let connection_y_pos: f32 = y_pos + connection_number as f32 * newline_offset;
-            draw_text((id.to_string() + ", " + address.as_str()).as_str(), x_pos, connection_y_pos, font_size, WHITE);
+            let connection_num_y_pos: f32 = y_pos + connection_number as f32 * newline_offset;
+            draw_text(
+                (id.to_string() + ", " + address.as_str()).as_str(),
+                x_pos,
+                connection_num_y_pos,
+                font_size,
+                WHITE,
+            );
             connection_number += 1;
         }
 

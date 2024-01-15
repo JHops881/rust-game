@@ -5,7 +5,8 @@ use std::{
 };
 
 use bincode::{deserialize, serialize};
-use netlib::{ClientToServerMessage, Connection, Entity, PlayerData, ServerToClientMessage};
+use macroquad::math::Vec2;
+use netlib::{ClientToServerMessage, Connection, Entity, PlayerData, ServerToClientMessage, Action};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -101,7 +102,7 @@ pub fn send_game_state_to_connected_players(
 }
 
 /// pocedure to server information to client (ONLY EVER 1476 BYTES MAX)
-pub fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
+pub fn recieve_client_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr)> {
     // buffer with the max size of how many bytes to read in from a datagram.
     let mut buf = [0; 1476];
     // receive
@@ -113,15 +114,25 @@ pub fn recieve_net_message(socket: &UdpSocket) -> Option<([u8; 1476], SocketAddr
 }
 
 /// TODO: DOC COMMENT
-pub fn proccess_net_message(
-    ser_msg: [u8; 1476],
+pub fn proccess_client_message(
+    ser_msg: &[u8; 1476],
     sender: SocketAddr,
     connection_table: &mut HashMap<String, Uuid>,
     game_world: &mut GameWorld,
 ) {
-    let message = deserialize::<ClientToServerMessage>(&ser_msg).expect("Failed to deserialize!");
+    let message = deserialize::<ClientToServerMessage>(ser_msg).expect("Failed to deserialize!");
     match message {
-        ClientToServerMessage::ActionEvent { event } => (),
+        ClientToServerMessage::ActionEvent { event } => match event {
+            Action::Move { x, y } => {
+                let sending_player_id: &Uuid = connection_table.get(&sender.to_string()).expect("CATASTROPHIC FAILURE");
+                for player in game_world.player_characters.iter_mut() {
+                    if *sending_player_id == player.get_uuid() {
+                        player.set_movement(Some(Vec2 { x, y}))
+                    }
+                }
+            }
+            Action::Shoot { x, y } => (),
+        },
         ClientToServerMessage::ConnectionEvent { event } => match event {
             Connection::Join => {
                 let id: Uuid = Uuid::new_v4();

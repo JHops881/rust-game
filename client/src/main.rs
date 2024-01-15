@@ -16,13 +16,13 @@ use macroquad::{
     miniquad::{window::set_fullscreen, KeyCode},
     window::{clear_background, next_frame},
 };
-use netlib::{system_time, ClientToServerMessage};
+use netlib::{system_time, ClientToServerMessage, PlayerData};
 use uuid::Uuid;
 use std::net::UdpSocket;
 
 use crate::{
     entity_graphic::EntityGraphic,
-    net::{recieve_net_data, send_net_message, proccess_net_data},
+    net::{seceive_server_message, send_client_message, proccess_server_message},
 };
 
 //////////////////////////////////// CODE /////////////////////////////////////
@@ -52,31 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }; // euclidian coordinates in the game world
 
     // Client's Player Data
-    let mut client_player_name: String = String::new();
-
-    let mut client_player_speed_stat: f32 = ZERO_FLOAT; // jogging speed
-    let mut client_player_health_stat: f32 = ZERO_FLOAT; // max health
-    let mut client_player_mana_stat: f32 = ZERO_FLOAT; // max mana
-    let mut client_player_power_stat: f32 = ZERO_FLOAT; // attack power
-    let mut client_player_vitality_stat: f32 = ZERO_FLOAT; // health regen in hp/s
-    let mut client_player_wisdom_stat: f32 = ZERO_FLOAT; // mana regen in mana/s
-    let mut client_player_dexterity_stat: f32 = ZERO_FLOAT; // attack speed attacks/s
-    let mut client_player_defense_stat: f32 = ZERO_FLOAT; // flat damage reduction
-
-    let mut client_player_current_speed: f32 = ZERO_FLOAT; // in m/s
-    let mut client_player_current_health: f32 = ZERO_FLOAT;
-    let mut client_player_current_mana: f32 = ZERO_FLOAT;
-
-    let mut client_player_is_dead: bool = false;
-    let mut client_player_is_sprinting: bool = false;
-
-    let mut client_player_basic_cost: f32 = ZERO_FLOAT; // mana cost of basic attack
-    let mut client_player_kenetic_pulse_cost: f32 = ZERO_FLOAT; // ... kenetic_pulse
-    let mut client_player_lightning_cost: f32 = ZERO_FLOAT;
-
-    let mut client_player_basic_power_multi: f32 = ZERO_FLOAT; // a value that deterimes how much damage
-    let mut client_player_kenetic_pulse_power_multi: f32 = ZERO_FLOAT; // it will do. It's a multiplier.
-    let mut client_player_lightning_power_multi: f32 = ZERO_FLOAT; // damage = power_stat * value
+    let mut client_player_data: PlayerData = PlayerData::new_default();
 
     /* ============ NETWORK ============ */
 
@@ -94,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Tell server client is joining
     let message = ClientToServerMessage::package_connection_join();
-    send_net_message(&socket, &message, server_addr);
+    send_client_message(&socket, &message, server_addr);
 
     // To enable linear interpolation, the client must always be one update behind the server.
     // It stores it in next_server_update and uses the position values to interpolate the
@@ -134,25 +110,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if is_key_pressed(KeyCode::Escape) {
                 let message = ClientToServerMessage::package_connection_drop();
-                send_net_message(&socket, &message, server_addr);
+                send_client_message(&socket, &message, server_addr);
                 std::process::exit(0);
+            }
+            if is_key_down(KeyCode::W) {
+                let message = ClientToServerMessage::package_action_move(Vec2 { x: 0.0, y: 1.0 });
+                send_client_message(&socket, &message, server_addr);
             }
             
             // ######### RECEIVE SERVER UPDATE TO CLIENT ######### //
-            let mut new_messages: Vec<[u8; 1476]> = Vec::new();
-
-            let msg_buf_option: Option<[u8; 1476]> = recieve_net_data(&socket);
-            match msg_buf_option {
-                Some(data) => {
-                    new_messages.push(data);
+            let mut new_serialized_messages: Vec<[u8; 1476]> = Vec::new();
+            loop {
+                let msg_buf_option: Option<[u8; 1476]> = seceive_server_message(&socket);
+                match msg_buf_option {
+                    Some(data) => {
+                        new_serialized_messages.push(data);
+                    }
+                    None => break,
                 }
-                None => (),
             }
 
             // ######### UPDATE CLIENT ACCOARDING TO STATE ######### //
 
-            for msg in new_messages.iter() {
-                proccess_net_data(msg, &mut graphics_entities)
+            for msg in new_serialized_messages.iter() {
+                proccess_server_message(msg, &mut graphics_entities)
             }
 
             accumulator -= target_time_frame;
