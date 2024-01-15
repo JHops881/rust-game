@@ -26,6 +26,7 @@ pub enum EntityType {
     LootBag,
 }
 
+/// anything that exists in the game
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Entity {
     pub id: Uuid,
@@ -34,11 +35,14 @@ pub struct Entity {
     pub entity_type: EntityType,
 }
 
+/// types of actions that a client can produce
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Action {
     Move { x: f32, y: f32 },
     Shoot { x: f32, y: f32 },
 }
+
+/// types of events that are needed in a connection
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Connection {
     Join,

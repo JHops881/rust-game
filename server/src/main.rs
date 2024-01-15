@@ -48,6 +48,7 @@ async fn main() {
 
     let mut connection_table: HashMap<String, Uuid> = HashMap::new();
 
+    // listen for information on port 42110
     let socket = UdpSocket::bind("127.0.0.1:42110").expect("couldn't bind to address");
     socket
         .set_nonblocking(true)
@@ -85,9 +86,9 @@ async fn main() {
                 }
             }
 
-            // process net data
+            // process net messages
             for (ser_msg, sender) in new_serialized_messages.iter() {
-                proccess_client_message(ser_msg, *sender, &mut connection_table, &mut game_world)
+                proccess_client_message(ser_msg, *sender, &mut connection_table, &mut game_world);
             }
 
             // update new game state

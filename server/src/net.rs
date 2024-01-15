@@ -7,7 +7,6 @@ use std::{
 use bincode::{deserialize, serialize};
 use macroquad::math::Vec2;
 use netlib::{ClientToServerMessage, Connection, Entity, PlayerData, ServerToClientMessage, Action};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{entity_factory::EntityFactory, game_world::GameWorld};
@@ -127,7 +126,7 @@ pub fn proccess_client_message(
                 let sending_player_id: &Uuid = connection_table.get(&sender.to_string()).expect("CATASTROPHIC FAILURE");
                 for player in game_world.player_characters.iter_mut() {
                     if *sending_player_id == player.get_uuid() {
-                        player.set_movement(Some(Vec2 { x, y}))
+                        player.set_movement(Some(Vec2 { x, y}));
                     }
                 }
             }

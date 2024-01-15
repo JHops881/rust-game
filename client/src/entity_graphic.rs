@@ -18,11 +18,7 @@ pub struct EntityGraphic {
 }
 
 impl EntityGraphic {
-    pub fn new(
-        this_world_pos: Vec2,
-        next_world_pos: Vec2,
-        entity_type: EntityType,
-    ) -> Self {
+    pub fn new(this_world_pos: Vec2, next_world_pos: Vec2, entity_type: EntityType) -> Self {
         EntityGraphic {
             this_world_pos,
             next_world_pos,
@@ -32,34 +28,28 @@ impl EntityGraphic {
 
     /* THIS UPDATE */
 
-    /// returns current x coord
     pub fn get_this_x(&self) -> f32 {
         self.this_world_pos.x
     }
 
-    /// returns current y coord
     pub fn get_this_y(&self) -> f32 {
         self.this_world_pos.y
     }
 
-    /// returns vector with current x and y coord
     pub fn get_this_position_vec2(&self) -> Vec2 {
         self.this_world_pos
     }
 
     /* NEXT UPDATE */
 
-    /// returns current x coord
     pub fn get_next_x(&self) -> f32 {
         self.next_world_pos.x
     }
 
-    /// returns current y coord
     pub fn get_next_y(&self) -> f32 {
         self.next_world_pos.y
     }
 
-    /// returns vector with current x and y coord
     pub fn get_next_position_vec2(&self) -> Vec2 {
         self.next_world_pos
     }
@@ -89,10 +79,9 @@ impl EntityGraphic {
         let lerp_coords: Vec2 = self.get_this_position_vec2()
             + (self.get_next_position_vec2() - self.get_this_position_vec2()) * t as f32;
 
-        // let lerp_coords: Vec2 = self.get_this_position_vec2();
-
         let screen_coord: Vec2 = convert_to_screen_coords(&lerp_coords, camera_pos);
 
-        draw_circle(screen_coord.x, screen_coord.y, 8.0, color);
+        let entity_graphic_radius: f32 = 8.0; // chosen arbitrarily.. in pixels. 
+        draw_circle(screen_coord.x, screen_coord.y, entity_graphic_radius, color);  
     }
 }

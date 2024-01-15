@@ -5,7 +5,7 @@ use netlib::EntityType;
 use uuid::Uuid;
 
 use crate::{
-    player_character::PlayerCharacter, spell::Spell, system_time,
+    spell::Spell, system_time,
 };
 
 //////////////////////////////////// CODE /////////////////////////////////////

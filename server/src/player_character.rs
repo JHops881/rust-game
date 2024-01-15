@@ -58,7 +58,7 @@ impl PlayerCharacter {
     /// call this every fixed_update to update the state of a player instance
     pub fn update(&mut self, delta_time: f32) {
 
-        match self.get_shootment() {
+        match self.get_movement() {
             Some(direction) => self.translate(direction, delta_time),
             None => (),
         }

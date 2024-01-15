@@ -28,6 +28,7 @@ pub struct EnemyCharacter {
 }
 
 // Constant values of monster initial stats
+// we should move these to the constants file. Maybe?
 const NO: bool = false;
 
 const FULL_PF32: f32 = 1.0;
