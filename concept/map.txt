@@ -57,7 +57,7 @@ Location {
                 attack with weak crowd contol abilities
             }
         }
-        Fiary {
+        Fairy {
             Teir: 5
             Terrain: Flowers grassland with occasional trees, hilly
             Monsters: Fairys, Trees, {
