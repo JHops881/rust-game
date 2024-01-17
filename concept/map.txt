@@ -1,0 +1,39 @@
+The map can be procedurally generated, but the towns can be pre-made.
+
+Location {
+    Town {
+        Balefall,
+        Astador,
+        Chent,
+        Murrow,
+        Malphasta {
+            Capitol of Uhum Territories
+        }
+        Baszark,
+        Passelli's Grove,
+        Genovia's Passage, 
+        Fallow's Burrow,
+        Kreigchent,
+        Lipidus,
+        Apos,
+        Mestedian City {
+            Capitol of Mestidian Region
+        },
+        Kelenhaven,
+        Podstburg,
+        Hapsenfield,
+    }
+    Biome {
+        Cedi's Hell {
+            A desert with tumbleweeds and dead vegetation. Only skeletons
+            and dead things wander here.
+        }
+        Fiary {
+            There's fairies all over. Sparkly purple trees with sparkles
+            and blue bark. The ground is a very very faint baby pink
+        }
+        Rainbow  {
+            It's all rainbows.
+        }
+    }
+}

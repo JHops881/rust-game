@@ -1,0 +1,42 @@
+==== Character Loadout / Inventory Concept ====
+
+Loadout Preview
++-------------------+----------------------------+
+| Character Name    |  Level: # ##% to #         |
++----------------+--+----------------+-----------+
+| Loadout*  (in) | Inventory*        | Stats*    |  // * These are tabs
++----------------+------+------------+-----------+
+|                       |     Type 1             |       
+|    +----+ o change    |     +----+ o change    |
+|    | 1  | o modify    |  M1 | 5  | o modify    | // 'M1' is an example keybind
+|    +----+             |     +----+             |   
+|                       |     Type 2             |       
+|    +----+ o change    |     +----+ o change    |
+|    | 2  | o modify    |  E  | 6  | o modify    |
+|    +----+             |     +----+             |
+|                       |     Type 3             |       
+|    +----+ o change    |     +----+ o change    |
+|    | 3  | o modify    |  R  | 7  | o modify    |
+|    +----+             |     +----+             |
+|                       |     Type 4             |       
+|    +----+ o change    |     +----+ o change    |
+|    | 4  | o modify    |  F  | 8  | o modify    |
+|    +----+             |     +----+             |
++-----------------------+------------------------+
+|              Power Level: #####                |
++------------------------------------------------+
+
+Buttons
+o change | Exchange loadout slot with compatible item from Inventory
+o modify | Enter the modding menu for item
+
+Slots
+1. Weapon: Modifides attack power and rate
+2. Artifact: Modifies mana and magic stats
+3. Armor: Modifies health and defense stats 
+4. Jewlery: Modifies anything
+
+5. Type 1 Ability: Zero cost basic attack ability
+6. Type 2 Ability: Low cost alternate ability
+7. Type 3 Ability: Medium cost crowd control ability
+8. Type 4 Ability: High cost ultimate AOE attack
