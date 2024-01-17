@@ -1,39 +1,87 @@
+WHAT NOT TO EVER PUT IN THE GAME:
+- Mech regions, monsters, dungeons
+- Story quests
+- upgrades that take arbitrary amounts of time
+
 The map can be procedurally generated, but the towns can be pre-made.
 
 Location {
+    
     Town {
+
+        Maybe the towns contain special abilities that can only bought at that unique town,
+        giving a reason to find more 
+        
+        Each biome has one town, each biome has one boss dungeon, you must find the town to
+        unlock the dungeons location, must complete the dungeon to complete the territory,
+        abilites are only ever dropped by dungeon bosses
+
         Balefall,
         Astador,
         Chent,
         Murrow,
-        Malphasta {
-            Capitol of Uhum Territories
-        }
+        Malphasta
         Baszark,
         Passelli's Grove,
         Genovia's Passage, 
-        Fallow's Burrow,
+        Fallowsboro,
         Kreigchent,
         Lipidus,
         Apos,
-        Mestedian City {
-            Capitol of Mestidian Region
-        },
+        Mestedian City,
         Kelenhaven,
         Podstburg,
         Hapsenfield,
     }
+
     Biome {
-        Cedi's Hell {
-            A desert with tumbleweeds and dead vegetation. Only skeletons
-            and dead things wander here.
+
+        Teired by difficulty / distance from spawn 0-10
+    
+        Starting Planes {
+            Teir: 0 (start)
+            Terrain: Flat Shrubbery, oak trees
+            Enemies: Rabid Farm animals {
+                weak slow melee attacks (charging)
+            }
+        }
+        Arid Rocky Pass {
+            Teir: 2
+            Terrain: -
+            Enemies: -
+        }
+        Jungle {
+            Teir: 3
+            Terrain: Tree heavy wetland
+            Enemies: Earthy Monsters {
+                attack with weak crowd contol abilities
+            }
         }
         Fiary {
-            There's fairies all over. Sparkly purple trees with sparkles
-            and blue bark. The ground is a very very faint baby pink
+            Teir: 5
+            Terrain: Flowers grassland with occasional trees, hilly
+            Monsters: Fairys, Trees, {
+                slow ranged attacks
+            }
         }
-        Rainbow  {
-            It's all rainbows.
+        Sea {
+            Teir: 7
+            Terrain: Water with islands
+            Monsters: -
+        }
+        Cedi's Hell {
+            Teir: 8
+            Terrain: A desert with tumbleweeds and dead vegetation
+            Enemies: skeletons, dry dead things {
+                fast erratic powerful melee attacks
+            }
+        }
+        Magma Fortress {
+            Teir: 9
+            Terrain: Magmafalls, dark stone brick, fire, 
+            Enemies: lava sludge {
+                slow ranged hurling CC burn blasting attacks
+            }
         }
     }
 }
