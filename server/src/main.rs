@@ -4,8 +4,6 @@ pub mod player_projectile;
 
 pub mod enemy_character;
 
-pub mod entity_factory;
-
 pub mod game_world;
 
 pub mod spell;
@@ -13,6 +11,8 @@ pub mod spell;
 pub mod net;
 
 pub mod constants;
+
+pub mod entity_component_system;
 
 ////////////////////////////////// IMPORTS ////////////////////////////////////
 
@@ -26,9 +26,6 @@ use std::{
 
 use constants::ZERO_ZERO;
 use enemy_character::{EnemyCharacter, EnemyType};
-
-use entity_factory::EntityFactory;
-use game_world::GameWorld;
 
 use macroquad::{
     color::{BLACK, BLUE, WHITE},
