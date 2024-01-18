@@ -1,13 +1,12 @@
 /////////////////////////////// IMPORTS ////////////////////////////////////
 
-use macroquad::{
-    color::{Color, WHITE},
-    math::DVec2,
-};
-use std::{collections::HashMap, hash::Hash};
+use glam::DVec2;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /////////////////////////////// TYPES ////////////////////////////////////
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Item {
     Stick,
     Rock,
@@ -16,6 +15,7 @@ pub enum Item {
     HealthPotion,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum TeamAffilition {
     Neutral,
     Player,
@@ -23,52 +23,60 @@ pub enum TeamAffilition {
 }
 
 /////////////////////////////// COMPONENTS ////////////////////////////////////
-
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Location {
     pub position: DVec2,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Movement {
     pub velocity: DVec2,
     pub acceleration: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Mass {
     pub mass: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Health {
     pub max: f64,
     pub current: f64,
     pub regen_rate: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Mana {
     pub max: f64,
     pub current: f64,
     pub regen_rate: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Defense {
     pub damage_reduction: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Team {
     pub affiliation: TeamAffilition,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Attack {
     pub power: f64,
     pub rate: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Container {
     pub inventory: Vec<(i32, Item)>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Graphical {
     pub radius: f64,
-    pub color: Color,
 }
 
 //////////////////////////// ENTITY DATABASE /////////////////////////////////
@@ -180,7 +188,6 @@ pub fn create_new_player(id_counter: &mut i64, entity_db: &mut EntityDatabase) {
         id,
         Graphical {
             radius: 8.0,
-            color: WHITE,
         },
     );
 }
@@ -199,6 +206,7 @@ pub fn create_drawable(id: i64, loc: Location, gfx: Graphical, entity_db: &mut E
 ///   
 /// Queries:
 /// + `Movement`
+/// + `Location`
 ///
 /// Mutates:
 /// + `Location`
