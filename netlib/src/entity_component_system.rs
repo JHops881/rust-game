@@ -1,7 +1,10 @@
 /////////////////////////////// IMPORTS ////////////////////////////////////
 
-use macroquad::math::DVec2;
-use std::{collections::HashMap, fs::copy};
+use macroquad::{
+    color::{Color, WHITE},
+    math::DVec2,
+};
+use std::{collections::HashMap, hash::Hash};
 
 /////////////////////////////// TYPES ////////////////////////////////////
 
@@ -63,6 +66,11 @@ pub struct Container {
     pub inventory: Vec<(i32, Item)>,
 }
 
+pub struct Graphical {
+    pub radius: f64,
+    pub color: Color,
+}
+
 //////////////////////////// ENTITY DATABASE /////////////////////////////////
 
 /// Entity Database contains all elements in the game in tables
@@ -80,16 +88,44 @@ pub struct EntityDatabase {
     pub team: HashMap<i64, Team>,
     pub attack: HashMap<i64, Attack>,
     pub container: HashMap<i64, Container>,
+    pub graphical: HashMap<i64, Graphical>,
+}
+impl EntityDatabase {
+    pub fn new() -> Self {
+        EntityDatabase {
+            location: HashMap::new(),
+            movement: HashMap::new(),
+            mass: HashMap::new(),
+            health: HashMap::new(),
+            mana: HashMap::new(),
+            defense: HashMap::new(),
+            team: HashMap::new(),
+            attack: HashMap::new(),
+            container: HashMap::new(),
+            graphical: HashMap::new(),
+        }
+    }
 }
 
 ///////////////////////////// ENTITY FACTORY //////////////////////////////////
 
+/// used on the server side
 pub fn create_new_player(id_counter: &mut i64, entity_db: &mut EntityDatabase) {
     *id_counter += 1;
     let id: i64 = *id_counter;
 
-    /* A player will have a location, movement, mass, health,
-    mana, defense, team, attack, and a container component. */
+    /*
+    [X] Location,
+    [X] Movement,
+    [X] Mass,
+    [X] Health,
+    [X] Mana,
+    [X] Defense,
+    [X] Team,
+    [X] Attack,
+    [ ] Container, TODO
+    [X] Graphical,
+    */
 
     entity_db.location.insert(
         id,
@@ -140,19 +176,52 @@ pub fn create_new_player(id_counter: &mut i64, entity_db: &mut EntityDatabase) {
             rate: 1.0,
         },
     );
+    entity_db.graphical.insert(
+        id,
+        Graphical {
+            radius: 8.0,
+            color: WHITE,
+        },
+    );
+}
+
+/// used on the client side
+pub fn create_drawable(id: i64, loc: Location, gfx: Graphical, entity_db: &mut EntityDatabase) {
+    entity_db.location.insert(id, loc);
+    entity_db.graphical.insert(id, gfx);
 }
 
 //////////////////////////////// SYSTEMS /////////////////////////////////////
 
 /// __Depends On:__
-/// + `location` component table,
-/// + `movement` component table,
-/// + `mass` component table,
+/// + Database `location` components,
+/// + Database `movement` components,
 ///   
 /// Queries:
 /// + `Movement`
-/// + `Mass`
-/// 
+///
 /// Mutates:
 /// + `Location`
-pub fn player_movement_system() {}
+/// 
+/// __Usage:__ call on the game server once every fixed update. Simulates moving  
+/// entities by advancing their locations as dictated by the properties of their  
+/// movemnent e.g. velocity and acceleration.
+pub fn movement_system(
+    movement: &HashMap<i64, Movement>,
+    location: &mut HashMap<i64, Location>,
+    delta_time: f64,
+) {
+    for (id, movement_data) in movement.iter() {
+        match location.get(id) {
+            Some(location_data) => {
+                location.insert(
+                    *id,
+                    Location {
+                        position: location_data.position + movement_data.velocity * delta_time,
+                    },
+                );
+            }
+            None => (),
+        }
+    }
+}

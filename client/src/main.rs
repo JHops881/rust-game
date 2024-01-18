@@ -1,7 +1,7 @@
 pub mod entity_graphic;
 pub mod constants;
 pub mod graphics_math;
-pub mod net;
+pub mod client_net;
 
 ////////////////////////////////// IMPORTS ////////////////////////////////////
 
@@ -21,7 +21,7 @@ use std::net::UdpSocket;
 
 use crate::{
     entity_graphic::EntityGraphic,
-    net::{seceive_server_message, send_client_message, proccess_server_message},
+    client_net::{seceive_server_message, send_client_message, proccess_server_message},
 };
 
 //////////////////////////////////// CODE /////////////////////////////////////

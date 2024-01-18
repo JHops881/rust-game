@@ -1,6 +1,8 @@
+pub mod entity_component_system;
+
 use std::time::{UNIX_EPOCH, SystemTime};
 
-use macroquad::{prelude::Vec2, math::Vec4Swizzles};
+use macroquad::prelude::Vec2;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
