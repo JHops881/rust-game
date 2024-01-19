@@ -1,9 +1,10 @@
 pub mod entity_component_system;
+pub mod system_time;
 
-use std::{time::{UNIX_EPOCH, SystemTime}, collections::HashMap};
+use entity_component_system::{
+    Attack, Container, Defense, Graphical, Health, Location, Mana, Mass, Movement, Team,
+};
 
-use entity_component_system::Location;
-use glam::DVec2;
 use serde::{Deserialize, Serialize};
 
 /// types of actions that a client can produce
@@ -20,61 +21,23 @@ pub enum Connection {
     KeepAlive,
     Drop,
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ClientToServerMessage {
     ActionEvent { event: Action },
     ConnectionEvent { event: Connection },
 }
 
-impl ClientToServerMessage {
-    pub fn package_action_shoot(mouse_world_pos: DVec2) -> Self {
-        Self::ActionEvent {
-            event: Action::Shoot {
-                x: mouse_world_pos.x,
-                y: mouse_world_pos.y,
-            },
-        }
-    }
-
-    pub fn package_action_move(direction: Vec2) -> Self {
-        Self::ActionEvent {
-            event: Action::Move {
-                x: direction.x,
-                y: direction.y,
-            },
-        }
-    }
-
-    pub fn package_connection_join() -> Self {
-        Self::ConnectionEvent { event: Connection::Join }
-    }
-
-    pub fn package_connection_drop() -> Self {
-        Self::ConnectionEvent { event: Connection::Drop }
-    }
-}
-
-
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ServerToClientMessage {
-    LocationData { data: HashMap<i64, Location> },
-}
-
-impl ServerToClientMessage {
-    pub fn package__data(data: Vec<Entity>) -> Self {
-        Self::EntityData { data }
-    }
-}
-
-/// Gives the current time in ms
-pub fn system_time() -> f64 {
-    // Get the current time
-    let now = SystemTime::now();
-
-    // Calculate the duration since the Unix epoch
-    let duration_since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
-
-    let milliseconds: f64 = duration_since_epoch.as_millis() as f64;
-
-    return milliseconds;
+    LocationData { data: Vec<(i64, Location)> },
+    MovementData { data: Vec<(i64, Movement)> },
+    MassData { data: Vec<(i64, Mass)> },
+    HealthData { data: Vec<(i64, Health)> },
+    ManaData { data: Vec<(i64, Mana)> },
+    DefenseData { data: Vec<(i64, Defense)> },
+    TeamData { data: Vec<(i64, Team)> },
+    AttackData { data: Vec<(i64, Attack)> },
+    ContainerData { data: Vec<(i64, Container)> },
+    GraphicalData { data: Vec<(i64, Graphical)> },
 }
