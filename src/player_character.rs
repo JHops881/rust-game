@@ -92,7 +92,8 @@ impl PlayerCharacter {
     pub fn from_saved() {}
 
     /// Use this procedure to move the PlayerCharacter around in the world accoarding to arrow key input.
-    pub fn translate(&mut self, d: Direction, deltat: f32) {
+    pub fn translate(&mut self, d: Direction, mut deltat: f32) {
+        deltat /= 1000.0;
         match d {
             Direction::Right => self.position.x = self.position.x + 1.0 * self.speed * deltat,
             Direction::Left => self.position.x = self.position.x - 1.0 * self.speed * deltat,
