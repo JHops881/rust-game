@@ -3,4 +3,10 @@ bin/*
 
 # Added by cargo
 
-/target
+/client/target
+
+/server/target
+
+/netlib/target
+
+/.vscode

@@ -1,5 +1,5 @@
 [package]
-name = "rust-game"
+name = "netlib"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 macroquad = "0.4.4"
+serde = { version = "1.0.194", features = ["derive"] }
+uuid = {version = "1.6.1", features = ["v4", "fast-rng", "serde"]}

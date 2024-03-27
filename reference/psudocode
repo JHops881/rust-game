@@ -1,0 +1,126 @@
+struct KeyBinding {
+    code: KeyCode.
+}
+
+fn get_binding_from_user() -> KeyBinding {
+
+}
+
+// change a key binding
+change_key() {
+    let binding = get_binding_from_user();
+    let key = get_key_input();
+    binding_name.code = key;
+}    
+
+{
+    if is_key_down(sprint_key) {
+        send(sprint_action_message);
+    }
+        
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// server environment
+vector {mob1, mob2, mob3, mob4, mob5.. }
+vector {tiles... }
+vector {projectiles... }
+vector {players... }
+vector {loot... }
+
+// types of game entities
+Entity {
+    type: EntityType
+    id: i32
+    x: f32,
+    y: f32,
+}
+
+
+b'#'
+// Entity type heirarchy
+Enenmy:   E, (G | P | D | C) 
+Tile:     T
+Proj:     B, (K | L)
+Player:   P, (O | M)
+Loot:     L
+Coin      C
+
+fn message_decoder_function(socket, bytes) -> array<Entity> {
+    // grab the first byte
+    let byte = message.grab(1 byte);
+    match byte {
+
+        // Enemies
+        E => {
+            // grab the next
+            let byte = message.grab(1 byte);
+            match byte {
+                // ghouls
+                G => {
+                    // grab next byte (number of ghouls)
+                    let num = message.grab(1 byte);
+                    let received_entities = array<Entity>(num);
+                    // check received enemies against current ones
+                    for re in received_entities {
+                        let already_cached: bool = false;
+                        for element in graphics_elements {
+                            if re.type == element.type && re.id == element.id {
+                                already_cached = true;
+                            }
+                        }
+                        match already_cached {
+                            true => {
+                                element.this_world_pos = element.next_world_pos;
+                                element.next_world_pos = vec2(re.x, re.y);
+                            },
+                            false => graphics_elements.add(received_entities[re.index()]);
+                        }
+                    }
+
+                },   
+                P => ... ,
+                D => ... ,
+                C => ... ,
+
+            }
+        },
+
+        // TIles
+        T => ...
+
+        // Pojectiles (Bullets)
+        B => {
+            // grab the next
+            let byte = message.grab(1 byte);
+            ...
+        },
+
+        // Players
+        P => {
+            // grab the next
+            let byte = message.grab(1 byte);
+            ...
+        },
+
+        // Loot Bags
+        L => ...
+        
+
+        // Coins
+        C => ...
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
