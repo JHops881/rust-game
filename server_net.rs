@@ -9,8 +9,6 @@ use macroquad::math::Vec2;
 use netlib::{ClientToServerMessage, Connection, Entity, PlayerData, ServerToClientMessage, Action};
 use uuid::Uuid;
 
-use crate::{entity_factory::EntityFactory, game_world::GameWorld};
-
 ///////////////////////////////////////////////////////////////////////////////
 
 pub fn send_game_state_to_connected_players(

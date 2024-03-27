@@ -127,6 +127,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "518faa5064866338b013ff9b2350dc318e14cc4fcd6cb8206d7e7c9886c98815"
 
 [[package]]
+name = "glam"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "151665d9be52f9bb40fc7966565d39666f2d1e69233571b71b87791c7e0528b3"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -169,7 +178,7 @@ checksum = "a0bf249d79f5080e200334fe30ffca25582d682ee2e180768ad7f121ba9f8caa"
 dependencies = [
  "bumpalo",
  "fontdue",
- "glam",
+ "glam 0.21.3",
  "image",
  "macroquad_macro",
  "miniquad",
@@ -224,9 +233,9 @@ checksum = "e1bcdd74c20ad5d95aacd60ef9ba40fdf77f767051040541df557b7a9b2a2121"
 name = "netlib"
 version = "0.1.0"
 dependencies = [
+ "glam 0.25.0",
  "macroquad",
  "serde",
- "uuid",
 ]
 
 [[package]]
@@ -372,6 +381,7 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "glam 0.25.0",
  "lazy_static",
  "macroquad",
  "netlib",
