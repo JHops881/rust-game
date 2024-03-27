@@ -83,5 +83,10 @@ Location {
                 slow ranged hurling CC burn blasting attacks
             }
         }
+        Glacierscape {
+            Teir: 10
+            Terrain: Glaciers... 
+            Enemies: Yetis/Polar Bear
+        }
     }
 }

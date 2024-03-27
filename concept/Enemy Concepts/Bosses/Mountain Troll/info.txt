@@ -1,0 +1,18 @@
+Name: Mountain Troll
+Teir: 2
+Description: 
+    Visual: Grey Brown, Looks unintelligent, carries club, 
+    Attacks: Slow
+        Slam: Club charges from behind head, slam ground (Heavy attack)
+        Swing: Club swings in an arc 90 degrees.. Short Range (Light attack with CC)
+    Fight Gameplay:
+        Phase 1:
+            Troll: Other little trolls come out from behind him to distract you.
+                They do like no damage. mostly to distract you.
+            Player: Hit the Mountain Troll Once to leave the phase
+        Phase 2: 
+            Troll: The troll gets angry and releases steam, Uses slam attacks
+            Player: Reduce mountain troll health 25% to leave the phase
+        Phase 3: 
+            Troll: More little trolls, Now the troll adds swing attacks,
+            Player: Slay the troll. 
